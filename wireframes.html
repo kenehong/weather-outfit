@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Outfit — Wireframe Concepts</title>
+<style>
+  :root {
+    --bg: #f5f5f5;
+    --surface: #fff;
+    --text: #1a1a1a;
+    --text-sub: #666;
+    --blue: #4a90d9;
+    --radius: 16px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --font: -apple-system, 'Pretendard', 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); }
+
+  /* Header */
+  .page-header {
+    text-align: center;
+    padding: 3rem 1rem 1.5rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+  }
+  .page-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .page-header p { font-size: 0.95rem; opacity: 0.85; }
+
+  /* Tab nav */
+  .tab-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .tab-btn {
+    border: 2px solid #ddd;
+    background: var(--surface);
+    padding: 0.625rem 1.25rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font);
+  }
+  .tab-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .tab-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* Concept sections */
+  .concept { display: none; padding: 1.5rem 1rem 3rem; max-width: 900px; margin: 0 auto; }
+  .concept.active { display: block; }
+  .concept-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .concept-desc { font-size: 0.9rem; color: var(--text-sub); margin-bottom: 1.5rem; line-height: 1.5; }
+  .concept-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .tag { font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 999px; background: #e8f0fe; color: #1a56db; font-weight: 500; }
+  .tag.con { background: #fde8e8; color: #c81e1e; }
+
+  /* Phone frame */
+  .phone-frame {
+    width: 375px;
+    height: 750px;
+    border-radius: 40px;
+    overflow: hidden;
+    margin: 0 auto 2rem;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    position: relative;
+    border: 8px solid #1a1a1a;
+  }
+
+  /* ===== Concept A: Fullscreen Character ===== */
+  .concept-a-screen {
+    width: 100%; height: 100%;
+    background: linear-gradient(180deg, #87CEEB 0%, #B0E2FF 50%, #E0F7FA 100%);
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+  }
+  .concept-a-screen .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3rem 1.25rem 0.75rem;
+    position: relative; z-index: 2;
+  }
+  .concept-a-screen .location { font-size: 0.95rem; font-weight: 600; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .concept-a-screen .search-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.3); backdrop-filter: blur(10px);
+    font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .concept-a-screen .character-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .concept-a-screen .character-placeholder {
+    width: 220px; height: 280px; border-radius: 24px;
+    background: rgba(255,255,255,0.25); backdrop-filter: blur(8px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.75rem; border: 2px dashed rgba(255,255,255,0.5);
+  }
+  .concept-a-screen .character-placeholder .emoji { font-size: 5rem; }
+  .concept-a-screen .character-placeholder span { font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+  .concept-a-screen .bottom-info {
+    padding: 1rem 1.25rem 2.5rem;
+    position: relative; z-index: 2;
+  }
+  .concept-a-screen .speech-bubble {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);
+    padding: 1rem 1.25rem; border-radius: 20px;
+    font-size: 1.25rem; font-weight: 700; color: #333;
+    margin-bottom: 0.75rem; text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .concept-a-screen .temp-info {
+    text-align: center; font-size: 0.9rem; color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  /* Floating clouds */
+  .cloud {
+    position: absolute; background: rgba(255,255,255,0.6);
+    border-radius: 50px; z-index: 0;
+  }
+  .cloud-1 { width: 120px; height: 40px; top: 15%; left: -10%; animation: drift 20s linear infinite; }
+  .cloud-2 { width: 80px; height: 28px; top: 25%; right: -5%; animation: drift 25s linear infinite reverse; }
+  .cloud-3 { width: 100px; height: 35px; top: 8%; left: 30%; animation: drift 18s linear infinite; }
+  @keyframes drift { 0% { transform: translateX(0); } 100% { transform: translateX(100px); } }
+
+  /* ===== Concept B: Card Layout ===== */
+  .concept-b-screen {
+    width: 100%; height: 100%;
+    background: #f0f4f8;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  .concept-b-screen .header {
+    padding: 3rem 1.25rem 0.75rem;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .concept-b-screen .greeting { font-size: 0.85rem; color: #888; }
+  .concept-b-screen .city { font-size: 1.2rem; font-weight: 700; }
+  .concept-b-screen .main-card {
+    margin: 0.75rem 1rem; padding: 1.25rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 20px; color: #fff;
+    display: flex; gap: 1rem; align-items: center;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.3);
+  }
+  .concept-b-screen .card-character {
+    width: 100px; height: 120px; border-radius: 16px;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem; flex-shrink: 0;
+  }
+  .concept-b-screen .card-info { flex: 1; }
+  .concept-b-screen .card-advice { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .concept-b-screen .card-temp { font-size: 2rem; font-weight: 300; }
+  .concept-b-screen .card-condition { font-size: 0.85rem; opacity: 0.8; }
+  .concept-b-screen .hourly {
+    margin: 0.75rem 1rem; padding: 1rem;
+    background: #fff; border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+  .concept-b-screen .hourly-title { font-size: 0.8rem; color: #888; margin-bottom: 0.75rem; font-weight: 600; }
+  .concept-b-screen .hourly-row {
+    display: flex; justify-content: space-between; text-align: center;
+  }
+  .concept-b-screen .hour-item { flex: 1; }
+  .concept-b-screen .hour-label { font-size: 0.7rem; color: #999; }
+  .concept-b-screen .hour-icon { font-size: 1.25rem; margin: 0.25rem 0; }
+  .concept-b-screen .hour-temp { font-size: 0.85rem; font-weight: 600; }
+  .concept-b-screen .tip-card {
+    margin: 0.75rem 1rem 2rem; padding: 1rem;
+    background: #FFF8E1; border-radius: 16px;
+    font-size: 0.85rem; color: #6d5700;
+    display: flex; gap: 0.5rem; align-items: center;
+  }
+
+  /* ===== Concept C: Scene ===== */
+  .concept-c-screen {
+    width: 100%; height: 100%;
+    background: #6B7B8D;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+  }
+  .concept-c-screen .scene {
+    flex: 1; position: relative;
+    background: linear-gradient(180deg, #5C7080 0%, #8899A6 40%, #6B8F71 70%, #4A7C59 100%);
+  }
+  /* Rain effect */
+  .rain-drop {
+    position: absolute; width: 2px; background: rgba(255,255,255,0.4);
+    border-radius: 2px; animation: rain-fall linear infinite;
+  }
+  @keyframes rain-fall { 0% { transform: translateY(-20px); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(500px); opacity: 0.3; } }
+  .concept-c-screen .scene-character {
+    position: absolute; bottom: 25%; left: 50%; transform: translateX(-50%);
+    font-size: 5rem; z-index: 2;
+  }
+  .concept-c-screen .scene-tree {
+    position: absolute; bottom: 20%; font-size: 3rem; z-index: 1;
+  }
+  .concept-c-screen .scene-tree.left { left: 10%; }
+  .concept-c-screen .scene-tree.right { right: 12%; }
+  .concept-c-screen .puddle {
+    position: absolute; bottom: 18%; left: 35%; width: 100px; height: 15px;
+    background: rgba(100,150,200,0.3); border-radius: 50%; z-index: 1;
+  }
+  .concept-c-screen .ground {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 22%;
+    background: linear-gradient(180deg, #4A7C59, #3D6B4A);
+  }
+  .concept-c-screen .scene-search {
+    position: absolute; top: 3rem; right: 1rem; z-index: 10;
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: rgba(0,0,0,0.2); backdrop-filter: blur(10px);
+    font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .concept-c-screen .info-bar {
+    padding: 1rem 1.25rem 2.5rem;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(12px);
+    color: #fff;
+  }
+  .concept-c-screen .info-city { font-size: 0.85rem; opacity: 0.7; }
+  .concept-c-screen .info-advice { font-size: 1.2rem; font-weight: 700; margin: 0.25rem 0; }
+  .concept-c-screen .info-row {
+    display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;
+  }
+
+  /* ===== Concept D: Emotion ===== */
+  .concept-d-screen {
+    width: 100%; height: 100%;
+    background: linear-gradient(180deg, #1a237e 0%, #3949ab 50%, #5c6bc0 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #fff;
+    position: relative;
+  }
+  .concept-d-screen .character-big {
+    font-size: 8rem; margin-bottom: 1.5rem;
+    animation: shiver 0.3s ease-in-out infinite alternate;
+  }
+  @keyframes shiver { 0% { transform: rotate(-2deg); } 100% { transform: rotate(2deg); } }
+  .concept-d-screen .advice-big {
+    font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .concept-d-screen .sub-info {
+    font-size: 0.9rem; opacity: 0.7;
+  }
+  .concept-d-screen .bottom-actions {
+    position: absolute; bottom: 2.5rem; left: 1.25rem; right: 1.25rem;
+    display: flex; gap: 0.75rem;
+  }
+  .concept-d-screen .action-btn {
+    flex: 1; padding: 0.875rem; border-radius: 16px; border: none;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    font-family: var(--font);
+  }
+  .concept-d-screen .action-btn.primary {
+    background: rgba(255,255,255,0.2); color: #fff;
+    backdrop-filter: blur(10px);
+  }
+  .concept-d-screen .action-btn.secondary {
+    background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);
+  }
+
+  /* ===== Comparison section ===== */
+  .comparison { padding: 2rem 1rem; max-width: 900px; margin: 0 auto; }
+  .comparison h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .compare-table th, .compare-table td { padding: 0.625rem 0.5rem; text-align: center; border-bottom: 1px solid #eee; }
+  .compare-table th { background: #f8f9fa; font-weight: 600; color: #555; }
+  .compare-table td:first-child { text-align: left; font-weight: 600; }
+  .stars { color: #f59e0b; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Weather Outfit App</h1>
+  <p>4 Wireframe Concepts</p>
+</div>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="a">A: Fullscreen</button>
+  <button class="tab-btn" data-tab="b">B: Card</button>
+  <button class="tab-btn" data-tab="c">C: Scene</button>
+  <button class="tab-btn" data-tab="d">D: Emotion</button>
+  <button class="tab-btn" data-tab="compare">Compare</button>
+</nav>
+
+<!-- Concept A -->
+<section class="concept active" id="concept-a">
+  <h2 class="concept-title">Concept A: Character Fullscreen</h2>
+  <p class="concept-desc">
+    Character dominates the screen. Minimal UI overlay.
+    Like opening a page of a picture book — instant understanding.
+  </p>
+  <div class="concept-tags">
+    <span class="tag">Most intuitive</span>
+    <span class="tag">Easiest to build</span>
+    <span class="tag">Kid-friendly</span>
+    <span class="tag con">Low info density</span>
+  </div>
+  <div class="phone-frame">
+    <div class="concept-a-screen">
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+      <div class="top-bar">
+        <span class="location">Seattle, WA</span>
+        <button class="search-btn">🔍</button>
+      </div>
+      <div class="character-area">
+        <div class="character-placeholder">
+          <span class="emoji">🧥</span>
+          <span>Gemini character here</span>
+        </div>
+      </div>
+      <div class="bottom-info">
+        <div class="speech-bubble">Grab a jacket! 🧥</div>
+        <div class="temp-info">54°F · Partly Cloudy</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Concept B -->
+<section class="concept" id="concept-b">
+  <h2 class="concept-title">Concept B: Character Card</h2>
+  <p class="concept-desc">
+    Card-based layout with character + hourly forecast + tips.
+    Balanced between visual fun and useful information.
+  </p>
+  <div class="concept-tags">
+    <span class="tag">Info + visual balance</span>
+    <span class="tag">Expandable</span>
+    <span class="tag con">Slightly complex for kids</span>
+    <span class="tag con">Less character focus</span>
+  </div>
+  <div class="phone-frame">
+    <div class="concept-b-screen">
+      <div class="header">
+        <div>
+          <div class="greeting">Good morning! ☀️</div>
+          <div class="city">Seattle</div>
+        </div>
+        <button class="search-btn" style="width:36px;height:36px;border-radius:50%;border:none;background:#e2e8f0;font-size:1rem;cursor:pointer;">🔍</button>
+      </div>
+      <div class="main-card">
+        <div class="card-character">🧥</div>
+        <div class="card-info">
+          <div class="card-advice">Light jacket is perfect! 👍</div>
+          <div class="card-temp">54°F</div>
+          <div class="card-condition">Partly Cloudy</div>
+        </div>
+      </div>
+      <div class="hourly">
+        <div class="hourly-title">TODAY'S FORECAST</div>
+        <div class="hourly-row">
+          <div class="hour-item"><div class="hour-label">9AM</div><div class="hour-icon">☀️</div><div class="hour-temp">50°</div></div>
+          <div class="hour-item"><div class="hour-label">12PM</div><div class="hour-icon">⛅</div><div class="hour-temp">54°</div></div>
+          <div class="hour-item"><div class="hour-label">3PM</div><div class="hour-icon">🌧</div><div class="hour-temp">52°</div></div>
+          <div class="hour-item"><div class="hour-label">6PM</div><div class="hour-icon">🌧</div><div class="hour-temp">48°</div></div>
+          <div class="hour-item"><div class="hour-label">9PM</div><div class="hour-icon">🌙</div><div class="hour-temp">45°</div></div>
+        </div>
+      </div>
+      <div class="tip-card">
+        <span>💡</span>
+        <span>Rain expected in the afternoon. Bring an umbrella!</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Concept C -->
+<section class="concept" id="concept-c">
+  <h2 class="concept-title">Concept C: Scene</h2>
+  <p class="concept-desc">
+    Character lives inside a weather scene. Rainy day = puddles and umbrella.
+    Snowy day = snowman and boots. Like a storybook illustration.
+  </p>
+  <div class="concept-tags">
+    <span class="tag">Most immersive</span>
+    <span class="tag">Storytelling feel</span>
+    <span class="tag con">High image cost</span>
+    <span class="tag con">Hard to keep consistent</span>
+  </div>
+  <div class="phone-frame">
+    <div class="concept-c-screen">
+      <div class="scene">
+        <button class="scene-search">🔍</button>
+        <!-- Rain drops -->
+        <div class="rain-drop" style="left:15%;height:12px;animation-duration:0.8s;animation-delay:0.1s;"></div>
+        <div class="rain-drop" style="left:30%;height:16px;animation-duration:0.7s;animation-delay:0.3s;"></div>
+        <div class="rain-drop" style="left:50%;height:10px;animation-duration:0.9s;animation-delay:0s;"></div>
+        <div class="rain-drop" style="left:65%;height:14px;animation-duration:0.75s;animation-delay:0.2s;"></div>
+        <div class="rain-drop" style="left:80%;height:11px;animation-duration:0.85s;animation-delay:0.15s;"></div>
+        <div class="rain-drop" style="left:25%;height:13px;animation-duration:0.65s;animation-delay:0.4s;"></div>
+        <div class="rain-drop" style="left:72%;height:15px;animation-duration:0.7s;animation-delay:0.05s;"></div>
+        <div class="rain-drop" style="left:42%;height:9px;animation-duration:0.95s;animation-delay:0.25s;"></div>
+        <div class="scene-tree left">🌲</div>
+        <div class="scene-tree right">🌳</div>
+        <div class="scene-character">☂️</div>
+        <div class="puddle"></div>
+        <div class="ground"></div>
+      </div>
+      <div class="info-bar">
+        <div class="info-city">Seattle, WA</div>
+        <div class="info-advice">Don't forget your umbrella! ☔</div>
+        <div class="info-row">
+          <span>🌧 Rain</span>
+          <span>48°F</span>
+          <span>Humid</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Concept D -->
+<section class="concept" id="concept-d">
+  <h2 class="concept-title">Concept D: Emotion Weather</h2>
+  <p class="concept-desc">
+    Character's emotion tells the weather. Cold = shivering, hot = sweating.
+    Solid gradient background. Extremely minimal — almost widget-like.
+  </p>
+  <div class="concept-tags">
+    <span class="tag">Most minimal</span>
+    <span class="tag">Fast loading</span>
+    <span class="tag">Character stands out</span>
+    <span class="tag con">Almost too simple</span>
+  </div>
+  <div class="phone-frame">
+    <div class="concept-d-screen">
+      <div class="character-big">🥶</div>
+      <div class="advice-big">Bundle up warm!</div>
+      <div class="sub-info">Seattle · 35°F</div>
+      <div class="bottom-actions">
+        <button class="action-btn primary">Other places</button>
+        <button class="action-btn secondary">🔍 Search</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section class="concept" id="concept-compare">
+  <div class="comparison">
+    <h2>Concept Comparison</h2>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>A: Fullscreen</th>
+          <th>B: Card</th>
+          <th>C: Scene</th>
+          <th>D: Emotion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Intuitive</td>
+          <td><span class="stars">★★★★</span></td>
+          <td><span class="stars">★★★</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★</span></td>
+        </tr>
+        <tr>
+          <td>Kid-friendly</td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★</span></td>
+        </tr>
+        <tr>
+          <td>Info density</td>
+          <td><span class="stars">★★</span></td>
+          <td><span class="stars">★★★★</span></td>
+          <td><span class="stars">★★</span></td>
+          <td><span class="stars">★</span></td>
+        </tr>
+        <tr>
+          <td>Expandable</td>
+          <td><span class="stars">★★</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★</span></td>
+          <td><span class="stars">★★</span></td>
+        </tr>
+        <tr>
+          <td>Image cost</td>
+          <td>Low</td>
+          <td>Low</td>
+          <td>High</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td>Build effort</td>
+          <td>Easy</td>
+          <td>Medium</td>
+          <td>Medium</td>
+          <td>Easy</td>
+        </tr>
+        <tr>
+          <td>Uniqueness</td>
+          <td><span class="stars">★★★</span></td>
+          <td><span class="stars">★★</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★</span></td>
+        </tr>
+        <tr>
+          <td>Character focus</td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★</span></td>
+          <td><span class="stars">★★★★</span></td>
+          <td><span class="stars">★★★★★</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:2rem;padding:1.25rem;background:#e8f5e9;border-radius:16px;">
+      <strong>Recommendation</strong>
+      <p style="margin-top:0.5rem;font-size:0.9rem;color:#2e7d32;line-height:1.5;">
+        <strong>A (Fullscreen)</strong> — Best match for the core idea: "see character, understand weather."
+        Easy to build, easy to manage Gemini images (character only, no scene backgrounds).<br><br>
+        <strong>Hybrid A+D</strong> is also worth considering — A's layout + D's emotion expressions + gradient backgrounds.
+        Keeps things simple while adding personality.
+      </p>
+    </div>
+  </div>
+</section>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const concepts = document.querySelectorAll('.concept');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      concepts.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`concept-${tab.dataset.tab}`).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Outfit — ASD Adaptive Design</title>
+<style>
+  :root {
+    --font: -apple-system, 'Pretendard', 'Segoe UI', sans-serif;
+    --chroma: 1;
+    --speed: 1;
+    --particle: 1;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font); background: #111827; color: #fff;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 1.5rem 1rem;
+  }
+
+  /* Page header */
+  .page-header { text-align: center; margin-bottom: 1.5rem; }
+  .page-header h1 { font-size: 1.5rem; font-weight: 700; }
+  .page-header p { font-size: 0.85rem; opacity: 0.5; margin-top: 0.25rem; }
+
+  /* Controls */
+  .controls {
+    display: flex; gap: 1.5rem; margin-bottom: 1.5rem;
+    flex-wrap: wrap; justify-content: center; align-items: flex-start;
+  }
+  .control-group { text-align: center; }
+  .control-label { font-size: 0.7rem; opacity: 0.4; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .btn-row { display: flex; gap: 0.375rem; }
+  .ctrl-btn {
+    border: 2px solid rgba(255,255,255,0.15); background: transparent; color: #fff;
+    padding: 0.4rem 0.875rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; font-family: var(--font);
+  }
+  .ctrl-btn:hover { border-color: rgba(255,255,255,0.4); }
+  .ctrl-btn.active { background: #667eea; border-color: #667eea; }
+
+  /* Display frame */
+  .display-frame {
+    width: 1024px; height: 600px;
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.5);
+    border: 6px solid #333;
+    position: relative;
+  }
+
+  /* ===== Main screen ===== */
+  .screen {
+    width: 100%; height: 100%;
+    display: flex; position: relative;
+    transition: background 0.6s;
+  }
+
+  /* Scene area */
+  .scene {
+    flex: 1; position: relative; overflow: hidden;
+    transition: background 1s;
+  }
+
+  /* Top bar */
+  .top-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem;
+    z-index: 20;
+  }
+  .sensory-toggle {
+    width: 40px; height: 40px; border-radius: 12px; border: none;
+    background: rgba(0,0,0,0.2); backdrop-filter: blur(8px);
+    font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .top-bar .location-time {
+    font-size: 0.8rem; opacity: 0.7;
+    background: rgba(0,0,0,0.2); backdrop-filter: blur(8px);
+    padding: 0.375rem 0.75rem; border-radius: 8px;
+  }
+  .settings-btn {
+    width: 40px; height: 40px; border-radius: 12px; border: none;
+    background: rgba(0,0,0,0.2); backdrop-filter: blur(8px);
+    font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Backgrounds */
+  .bg-rainy { background: linear-gradient(180deg, #5C7080 0%, #8899A6 40%, #6B8F71 70%, #4A7C59 100%); }
+  .bg-rainy-calm { background: linear-gradient(180deg, #6d7a84 0%, #929fa8 40%, #7d9a82 70%, #5f8d6a 100%); }
+  .bg-rainy-still { background: #8899A6; }
+
+  /* Ground */
+  .ground {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 25%;
+    transition: background 1s;
+  }
+  .bg-rainy .ground, .bg-rainy-calm .ground { background: linear-gradient(180deg, #4A7C59, #3D6B4A); }
+  .bg-rainy-still .ground { background: #5a7d62; }
+
+  /* Character */
+  .character-spot {
+    position: absolute; bottom: 25%; left: 50%; transform: translateX(-50%);
+    z-index: 10; text-align: center;
+    transition: all 0.5s;
+  }
+  .character-box {
+    border-radius: 20px;
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(6px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; border: 2px dashed rgba(255,255,255,0.25);
+    transition: all 0.5s;
+  }
+  .character-box .emoji { transition: font-size 0.3s; }
+  .character-box .label { font-size: 0.6rem; opacity: 0.5; }
+
+  /* Trees */
+  .tree { position: absolute; bottom: 22%; font-size: 2.5rem; z-index: 5; transition: opacity 0.5s; }
+  .puddle {
+    position: absolute; bottom: 23%; width: 60px; height: 10px;
+    background: rgba(100,150,200,0.3); border-radius: 50%; z-index: 4;
+    transition: opacity 0.5s;
+  }
+
+  /* Rain particles */
+  .rain-drop {
+    position: absolute; width: 2px; background: rgba(255,255,255,0.35);
+    border-radius: 2px;
+    transition: opacity 0.5s;
+  }
+  .rain-drop.animated { animation: rain-fall linear infinite; }
+  @keyframes rain-fall { 0% { transform: translateY(-20px); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(600px); opacity: 0.2; } }
+
+  /* Calm mode: static rain lines */
+  .rain-static {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 25%;
+    background: repeating-linear-gradient(
+      170deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.06) 20px,
+      rgba(255,255,255,0.06) 21px
+    );
+    opacity: 0; transition: opacity 0.5s; z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Transition notice */
+  .transition-notice {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+    padding: 0.75rem 1.5rem; border-radius: 12px;
+    font-size: 0.9rem; opacity: 0; z-index: 30;
+    transition: opacity 0.3s; pointer-events: none;
+  }
+  .transition-notice.show { opacity: 1; }
+
+  /* ===== Info panel ===== */
+  .info-panel {
+    width: 280px; flex-shrink: 0;
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(16px);
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 20;
+    transition: all 0.5s;
+  }
+
+  /* Level 1 info */
+  .info-l1 .weather-emoji { font-size: 4rem; text-align: center; margin-bottom: 0.75rem; }
+  .info-l1 .weather-word { font-size: 2rem; font-weight: 700; text-align: center; }
+
+  /* Level 2 info */
+  .info-l2 .weather-icon-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+  .info-l2 .weather-icon-row .icon { font-size: 1.5rem; }
+  .info-l2 .weather-icon-row .label { font-size: 1rem; opacity: 0.8; }
+  .info-l2 .temp { font-size: 2.5rem; font-weight: 200; margin-bottom: 0.5rem; }
+  .info-l2 .advice-bubble {
+    background: rgba(255,255,255,0.1); padding: 0.75rem 1rem;
+    border-radius: 12px; font-size: 0.95rem; line-height: 1.4;
+    margin-bottom: 1rem;
+  }
+  .info-l2 .hourly {
+    display: flex; justify-content: space-between; text-align: center;
+  }
+  .info-l2 .hour-item .time { font-size: 0.65rem; opacity: 0.5; }
+  .info-l2 .hour-item .icon { font-size: 1.25rem; margin: 0.125rem 0; }
+
+  /* Level 3 info */
+  .info-l3 .weather-icon-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.125rem; }
+  .info-l3 .weather-icon-row .icon { font-size: 1.25rem; }
+  .info-l3 .weather-icon-row .label { font-size: 0.85rem; opacity: 0.8; }
+  .info-l3 .temp-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.375rem; }
+  .info-l3 .temp-row .temp { font-size: 2rem; font-weight: 200; }
+  .info-l3 .temp-row .feels { font-size: 0.8rem; opacity: 0.5; }
+  .info-l3 .advice-bubble {
+    background: rgba(255,255,255,0.1); padding: 0.625rem 0.875rem;
+    border-radius: 10px; font-size: 0.85rem; line-height: 1.4;
+    margin-bottom: 0.75rem;
+  }
+  .info-l3 .details {
+    display: flex; gap: 0.75rem; font-size: 0.8rem; opacity: 0.6;
+    margin-bottom: 0.75rem;
+  }
+  .info-l3 .forecast {
+    display: flex; justify-content: space-between; text-align: center;
+    margin-bottom: 0.75rem;
+  }
+  .info-l3 .fc-item .time { font-size: 0.6rem; opacity: 0.4; }
+  .info-l3 .fc-item .icon { font-size: 1rem; }
+  .info-l3 .fc-item .ftemp { font-size: 0.75rem; opacity: 0.7; }
+  .info-l3 .search-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(255,255,255,0.08); border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+  }
+  .info-l3 .search-bar span { font-size: 0.8rem; opacity: 0.4; }
+
+  /* Hide/show by level */
+  .level-content { display: none; }
+  .level-content.active { display: block; }
+
+  /* ===== Visual schedule (Level 1 only) ===== */
+  .visual-schedule {
+    position: absolute; bottom: 0; left: 0; right: 280px;
+    height: 56px; z-index: 25;
+    background: rgba(0,0,0,0.3); backdrop-filter: blur(12px);
+    display: none; /* shown only for L1 */
+    align-items: center; justify-content: center; gap: 2rem;
+    padding: 0 2rem;
+  }
+  .visual-schedule.show { display: flex; }
+  .schedule-step {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; border-radius: 12px;
+    font-size: 0.85rem; cursor: pointer;
+    transition: all 0.3s;
+    opacity: 0.5;
+  }
+  .schedule-step.active {
+    opacity: 1;
+    background: rgba(255,255,255,0.15);
+  }
+  .schedule-step .step-icon { font-size: 1.5rem; }
+  .schedule-step .step-label { font-weight: 600; }
+  .schedule-connector {
+    width: 40px; height: 2px; background: rgba(255,255,255,0.2);
+  }
+  .schedule-connector.done { background: rgba(255,255,255,0.5); }
+
+  /* ===== Dress checklist overlay ===== */
+  .checklist-overlay {
+    position: absolute; top: 0; left: 0; right: 280px; bottom: 56px;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    display: none; z-index: 22;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.75rem;
+  }
+  .checklist-overlay.show { display: flex; }
+  .checklist-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .check-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.75rem 1.5rem; border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    font-size: 1rem; min-width: 220px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .check-item:hover { background: rgba(255,255,255,0.18); }
+  .check-item.checked { opacity: 0.5; }
+  .check-item .check-box { font-size: 1.25rem; }
+  .check-item .check-label { font-weight: 500; }
+
+  /* Ready overlay */
+  .ready-overlay {
+    position: absolute; top: 0; left: 0; right: 280px; bottom: 56px;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    display: none; z-index: 22;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 1rem;
+  }
+  .ready-overlay.show { display: flex; }
+  .ready-emoji { font-size: 5rem; }
+  .ready-text { font-size: 1.5rem; font-weight: 700; }
+  .ready-sub { font-size: 1rem; opacity: 0.7; }
+
+  /* Notes */
+  .notes {
+    max-width: 900px; margin-top: 2rem; padding: 1.5rem;
+    background: rgba(255,255,255,0.04); border-radius: 16px;
+    font-size: 0.85rem; line-height: 1.6;
+  }
+  .notes h3 { font-size: 1rem; margin-bottom: 0.75rem; }
+  .notes ul { padding-left: 1.25rem; }
+  .notes li { margin-bottom: 0.5rem; opacity: 0.7; }
+  .notes .hl { color: #90caf9; font-weight: 600; }
+
+  /* Scale for smaller screens */
+  @media (max-width: 1100px) {
+    .display-frame { transform: scale(0.85); transform-origin: top center; }
+  }
+  @media (max-width: 900px) {
+    .display-frame { transform: scale(0.65); transform-origin: top center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Weather Outfit — ASD Adaptive</h1>
+  <p>Smart Display (1024×600) · Level + Sensory Mode Preview</p>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <div class="control-label">Learning Level</div>
+    <div class="btn-row">
+      <button class="ctrl-btn active" data-level="1">L1 · Ages 5-7</button>
+      <button class="ctrl-btn" data-level="2">L2 · Ages 8-12</button>
+      <button class="ctrl-btn" data-level="3">L3 · Ages 13+</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="control-label">Sensory Profile</div>
+    <div class="btn-row">
+      <button class="ctrl-btn active" data-sensory="standard">☀️ Standard</button>
+      <button class="ctrl-btn" data-sensory="calm">🌙 Calm</button>
+      <button class="ctrl-btn" data-sensory="still">⏸️ Still</button>
+    </div>
+  </div>
+</div>
+
+<div class="display-frame">
+  <div class="screen">
+    <!-- Scene area -->
+    <div class="scene bg-rainy" id="scene">
+      <!-- Top bar -->
+      <div class="top-bar">
+        <button class="sensory-toggle" id="sensoryBtn" title="Sensory mode">☀️</button>
+        <span class="location-time">Seattle, WA · 3:00 PM</span>
+        <button class="settings-btn" title="Settings (hold 3s)">⚙️</button>
+      </div>
+
+      <!-- Rain particles (Standard) -->
+      <div class="rain-drop animated" style="left:8%;height:14px;animation-duration:0.7s;animation-delay:0.1s;" data-particle></div>
+      <div class="rain-drop animated" style="left:18%;height:10px;animation-duration:0.85s;animation-delay:0.3s;" data-particle></div>
+      <div class="rain-drop animated" style="left:28%;height:16px;animation-duration:0.65s;animation-delay:0s;" data-particle></div>
+      <div class="rain-drop animated" style="left:38%;height:12px;animation-duration:0.8s;animation-delay:0.2s;" data-particle></div>
+      <div class="rain-drop animated" style="left:48%;height:11px;animation-duration:0.75s;animation-delay:0.15s;" data-particle></div>
+      <div class="rain-drop animated" style="left:58%;height:15px;animation-duration:0.7s;animation-delay:0.4s;" data-particle></div>
+      <div class="rain-drop animated" style="left:68%;height:9px;animation-duration:0.9s;animation-delay:0.05s;" data-particle></div>
+      <div class="rain-drop animated" style="left:78%;height:13px;animation-duration:0.72s;animation-delay:0.25s;" data-particle></div>
+
+      <!-- Calm static rain -->
+      <div class="rain-static" id="rainStatic"></div>
+
+      <!-- Scene elements -->
+      <div class="tree" style="left:8%;">🌲</div>
+      <div class="tree" style="left:22%;">🌳</div>
+      <div class="tree" style="right:18%;">🌲</div>
+      <div class="puddle" style="left:18%;"></div>
+      <div class="puddle" style="left:55%;"></div>
+
+      <!-- Character -->
+      <div class="character-spot" id="character">
+        <div class="character-box" id="charBox" style="width:160px;height:200px;">
+          <span class="emoji" style="font-size:4.5rem;">☂️</span>
+          <span class="label">Gemini character</span>
+        </div>
+      </div>
+
+      <div class="ground"></div>
+
+      <!-- Transition notice -->
+      <div class="transition-notice" id="transNotice">Weather is changing...</div>
+
+      <!-- Checklist overlay (L1 step 2) -->
+      <div class="checklist-overlay" id="checklistOverlay">
+        <div class="checklist-title">What to wear today</div>
+        <div class="check-item" data-check="1"><span class="check-box">⬜</span><span class="check-label">🧥 Jacket</span></div>
+        <div class="check-item" data-check="2"><span class="check-box">⬜</span><span class="check-label">👖 Long pants</span></div>
+        <div class="check-item" data-check="3"><span class="check-box">⬜</span><span class="check-label">☂️ Umbrella</span></div>
+        <div class="check-item" data-check="4"><span class="check-box">⬜</span><span class="check-label">👟 Rain boots</span></div>
+      </div>
+
+      <!-- Ready overlay (L1 step 3) -->
+      <div class="ready-overlay" id="readyOverlay">
+        <div class="ready-emoji">👍</div>
+        <div class="ready-text">All ready!</div>
+        <div class="ready-sub">Have a great day!</div>
+      </div>
+    </div>
+
+    <!-- Info panel -->
+    <div class="info-panel">
+      <!-- Level 1 -->
+      <div class="level-content active" id="infoL1">
+        <div class="info-l1">
+          <div class="weather-emoji">🌧</div>
+          <div class="weather-word">Rain!</div>
+        </div>
+      </div>
+
+      <!-- Level 2 -->
+      <div class="level-content" id="infoL2">
+        <div class="info-l2">
+          <div class="weather-icon-row"><span class="icon">🌧</span><span class="label">Rain</span></div>
+          <div class="temp">48°F</div>
+          <div class="advice-bubble">Grab a jacket and bring your umbrella! 🧥☂️</div>
+          <div class="hourly">
+            <div class="hour-item"><div class="time">9AM</div><div class="icon">⛅</div></div>
+            <div class="hour-item"><div class="time">12PM</div><div class="icon">🌧</div></div>
+            <div class="hour-item"><div class="time">3PM</div><div class="icon">🌧</div></div>
+            <div class="hour-item"><div class="time">6PM</div><div class="icon">🌙</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Level 3 -->
+      <div class="level-content" id="infoL3">
+        <div class="info-l3">
+          <div class="weather-icon-row"><span class="icon">🌧</span><span class="label">Rain</span></div>
+          <div class="temp-row">
+            <span class="temp">48°F</span>
+            <span class="feels">Feels 44°F</span>
+          </div>
+          <div class="advice-bubble">It's windy and rainy — a windbreaker is recommended</div>
+          <div class="details">
+            <span>💧 82%</span>
+            <span>💨 12mph</span>
+            <span>☀️ UV 1</span>
+          </div>
+          <div class="forecast">
+            <div class="fc-item"><div class="time">9AM</div><div class="icon">⛅</div><div class="ftemp">50°</div></div>
+            <div class="fc-item"><div class="time">12PM</div><div class="icon">🌧</div><div class="ftemp">48°</div></div>
+            <div class="fc-item"><div class="time">3PM</div><div class="icon">🌧</div><div class="ftemp">46°</div></div>
+            <div class="fc-item"><div class="time">6PM</div><div class="icon">🌧</div><div class="ftemp">44°</div></div>
+            <div class="fc-item"><div class="time">9PM</div><div class="icon">🌙</div><div class="ftemp">42°</div></div>
+            <div class="fc-item"><div class="time">12AM</div><div class="icon">🌙</div><div class="ftemp">40°</div></div>
+          </div>
+          <div class="search-bar">
+            <span>🔍</span>
+            <span>Search other places...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visual schedule -->
+  <div class="visual-schedule show" id="schedule">
+    <div class="schedule-step active" data-step="1">
+      <span class="step-icon">🌤️</span>
+      <span class="step-label">Weather</span>
+    </div>
+    <div class="schedule-connector" id="conn1"></div>
+    <div class="schedule-step" data-step="2">
+      <span class="step-icon">🧥</span>
+      <span class="step-label">Clothes</span>
+    </div>
+    <div class="schedule-connector" id="conn2"></div>
+    <div class="schedule-step" data-step="3">
+      <span class="step-icon">🚪</span>
+      <span class="step-label">Go!</span>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <h3>ASD Design Highlights</h3>
+  <ul>
+    <li><span class="hl">Predictability</span>: Layout ratio (70/30) and element order NEVER changes. Only info amount changes.</li>
+    <li><span class="hl">Sensory Profiles</span>: Standard (full animation) → Calm (no particles, -30% saturation, 2x slower transitions) → Still (no animation, flat color).</li>
+    <li><span class="hl">3 Learning Levels</span>: L1 = emoji + 1 word (no numbers). L2 = temp + sentence + hourly icons. L3 = full data + search.</li>
+    <li><span class="hl">Visual Schedule</span>: L1 only. Weather → Dress checklist → Ready to go! Tap each step. No auto-advance.</li>
+    <li><span class="hl">Transition notice</span>: "Weather is changing..." shown 2s before any scene change.</li>
+    <li><span class="hl">Interactions</span>: Single tap only. No swipe, long-press, or double-tap. Touch targets 56px+.</li>
+    <li><span class="hl">Parent settings</span>: Hold ⚙️ 3 seconds. Controls sensory profile, level (lockable), schedule on/off.</li>
+    <li><span class="hl">No infantilization</span>: Same character for all ages. Only info complexity changes.</li>
+  </ul>
+</div>
+
+<script>
+  // State
+  let currentLevel = 1;
+  let currentSensory = 'standard';
+  let currentStep = 1;
+
+  const scene = document.getElementById('scene');
+  const particles = document.querySelectorAll('[data-particle]');
+  const rainStatic = document.getElementById('rainStatic');
+  const schedule = document.getElementById('schedule');
+  const charBox = document.getElementById('charBox');
+  const character = document.getElementById('character');
+  const checklistOverlay = document.getElementById('checklistOverlay');
+  const readyOverlay = document.getElementById('readyOverlay');
+  const sensoryBtn = document.getElementById('sensoryBtn');
+  const transNotice = document.getElementById('transNotice');
+
+  // Level buttons
+  document.querySelectorAll('[data-level]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-level]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLevel = parseInt(btn.dataset.level);
+      updateLevel();
+    });
+  });
+
+  // Sensory buttons
+  document.querySelectorAll('[data-sensory]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-sensory]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSensory = btn.dataset.sensory;
+      updateSensory();
+    });
+  });
+
+  // Schedule steps
+  document.querySelectorAll('.schedule-step').forEach(step => {
+    step.addEventListener('click', () => {
+      currentStep = parseInt(step.dataset.step);
+      updateScheduleStep();
+    });
+  });
+
+  // Checklist items
+  document.querySelectorAll('.check-item').forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('checked');
+      const box = item.querySelector('.check-box');
+      box.textContent = item.classList.contains('checked') ? '✅' : '⬜';
+    });
+  });
+
+  function updateLevel() {
+    // Hide all level contents
+    document.querySelectorAll('.level-content').forEach(el => el.classList.remove('active'));
+    document.getElementById(`infoL${currentLevel}`).classList.add('active');
+
+    // Show/hide schedule (L1 only)
+    schedule.classList.toggle('show', currentLevel === 1);
+
+    // Reset step
+    currentStep = 1;
+    updateScheduleStep();
+
+    // Character size by level
+    if (currentLevel === 3) {
+      charBox.style.width = '120px';
+      charBox.style.height = '140px';
+      charBox.querySelector('.emoji').style.fontSize = '3rem';
+    } else {
+      charBox.style.width = '160px';
+      charBox.style.height = '200px';
+      charBox.querySelector('.emoji').style.fontSize = '4.5rem';
+    }
+  }
+
+  function updateSensory() {
+    // Update scene background
+    scene.classList.remove('bg-rainy', 'bg-rainy-calm', 'bg-rainy-still');
+    if (currentSensory === 'standard') {
+      scene.classList.add('bg-rainy');
+      sensoryBtn.textContent = '☀️';
+    } else if (currentSensory === 'calm') {
+      scene.classList.add('bg-rainy-calm');
+      sensoryBtn.textContent = '🌙';
+    } else {
+      scene.classList.add('bg-rainy-still');
+      sensoryBtn.textContent = '⏸️';
+    }
+
+    // Particles
+    particles.forEach(p => {
+      if (currentSensory === 'standard') {
+        p.style.opacity = '1';
+        p.classList.add('animated');
+      } else {
+        p.style.opacity = '0';
+        p.classList.remove('animated');
+      }
+    });
+
+    // Static rain (Calm only)
+    rainStatic.style.opacity = currentSensory === 'calm' ? '1' : '0';
+
+    // Trees/puddles opacity
+    const sceneElements = document.querySelectorAll('.tree, .puddle');
+    sceneElements.forEach(el => {
+      el.style.opacity = currentSensory === 'still' ? '0.3' : '1';
+    });
+  }
+
+  function updateScheduleStep() {
+    // Highlight active step
+    document.querySelectorAll('.schedule-step').forEach(s => {
+      s.classList.toggle('active', parseInt(s.dataset.step) === currentStep);
+    });
+
+    // Connectors
+    document.getElementById('conn1').classList.toggle('done', currentStep >= 2);
+    document.getElementById('conn2').classList.toggle('done', currentStep >= 3);
+
+    // Show/hide overlays
+    checklistOverlay.classList.toggle('show', currentLevel === 1 && currentStep === 2);
+    readyOverlay.classList.toggle('show', currentLevel === 1 && currentStep === 3);
+  }
+
+  // Demo: transition notice
+  sensoryBtn.addEventListener('click', () => {
+    const modes = ['standard', 'calm', 'still'];
+    const idx = (modes.indexOf(currentSensory) + 1) % 3;
+    currentSensory = modes[idx];
+
+    // Show transition notice
+    transNotice.classList.add('show');
+    setTimeout(() => {
+      transNotice.classList.remove('show');
+      // Update sensory after notice
+      document.querySelectorAll('[data-sensory]').forEach(b => {
+        b.classList.toggle('active', b.dataset.sensory === currentSensory);
+      });
+      updateSensory();
+    }, currentSensory === 'still' ? 500 : 1500);
+  });
+</script>
+
+</body>
+</html>

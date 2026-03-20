@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Outfit</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Press Start 2P', monospace;
+    --font-body: 'VT323', monospace;
+    --gold: oklch(84% 0.19 95);
+    --gold-dim: oklch(70% 0.15 95);
+    --navy: oklch(14% 0.03 275);
+    --text: oklch(95% 0.03 90);
+    --shadow: 3px 3px 0 oklch(5% 0.02 280);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-body); background: var(--navy); color: var(--text);
+    width: 100vw; height: 100vh; overflow: hidden;
+  }
+
+  .scene {
+    width: 100%; height: 100%;
+    position: relative; overflow: hidden;
+    background-size: cover; background-position: center bottom;
+    transition: background-image 0.8s;
+  }
+  .scanline {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,0.03) 2px 4px);
+    pointer-events: none; z-index: 15;
+  }
+  .character {
+    position: absolute; bottom: 8%; left: 35%; transform: translateX(-50%);
+    z-index: 10; height: 35vh; aspect-ratio: 1; image-rendering: pixelated;
+  }
+  .character img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+
+  /* Glass Panel */
+  .info-panel {
+    position: absolute; top: 16px; right: 16px; bottom: 16px;
+    width: min(280px, 30vw);
+    background: rgba(10,10,30,0.55);
+    backdrop-filter: blur(30px) saturate(1.3);
+    -webkit-backdrop-filter: blur(30px) saturate(1.3);
+    border: 2px solid rgba(255,210,80,0.35);
+    display: flex; flex-direction: column;
+    padding: 1rem 1.125rem; z-index: 20;
+  }
+  .panel-top { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
+  .menu-btn {
+    width: 28px; height: 28px; border: 2px solid rgba(255,210,80,0.3);
+    background: rgba(255,210,80,0.08); color: var(--gold);
+    font-size: 0.9rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-body); letter-spacing: 2px;
+  }
+  .menu-btn:hover { background: rgba(255,210,80,0.2); border-color: var(--gold); }
+  .weather-label {
+    font-family: var(--font-display); font-size: 0.55rem;
+    color: var(--gold); letter-spacing: 0.05em;
+    text-transform: uppercase; margin-bottom: 0.25rem;
+  }
+  .temp {
+    font-family: var(--font-display); font-size: 1.75rem;
+    color: var(--text); line-height: 1; margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 0 oklch(5% 0.02 280);
+  }
+  .advice-bubble {
+    background: rgba(255,210,80,0.08); border: 2px solid rgba(255,210,80,0.2);
+    padding: 0.625rem 0.75rem; font-size: 1.25rem; line-height: 1.5; margin-bottom: 1rem;
+  }
+  .hourly {
+    display: flex; justify-content: space-between; text-align: center;
+    border-top: 1px solid rgba(255,210,80,0.15);
+    border-bottom: 1px solid rgba(255,210,80,0.15);
+    padding: 0.5rem 0; margin-bottom: 0.75rem;
+  }
+  .hour-item .time { font-family: var(--font-display); font-size: 0.35rem; color: var(--gold-dim); }
+  .hour-item .h-icon { font-size: 1.1rem; margin: 0.25rem 0; }
+  .hour-item .h-temp { font-size: 0.9rem; opacity: 0.7; }
+
+  .search-location {
+    margin-top: auto; display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(255,210,80,0.06); border: 2px solid rgba(255,210,80,0.2);
+    padding: 0.5rem 0.75rem; cursor: pointer;
+  }
+  .search-location:hover { background: rgba(255,210,80,0.12); border-color: rgba(255,210,80,0.4); }
+  .search-location .loc-text {
+    font-family: var(--font-body); font-size: 1rem;
+    color: var(--gold); flex: 1; letter-spacing: 0.03em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Search modal */
+  .search-modal {
+    display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,10,30,0.85); backdrop-filter: blur(20px);
+    z-index: 50; flex-direction: column; align-items: center; padding-top: 15vh;
+  }
+  .search-modal.open { display: flex; }
+  .search-modal input {
+    font-family: var(--font-body); font-size: 1.5rem;
+    background: rgba(255,210,80,0.08); border: 2px solid var(--gold-dim);
+    color: var(--text); padding: 0.75rem 1rem; width: min(400px, 80vw); outline: none;
+  }
+  .search-modal input:focus { border-color: var(--gold); }
+  .search-modal input::placeholder { color: rgba(255,210,80,0.3); }
+  .search-results { width: min(400px, 80vw); margin-top: 0.5rem; max-height: 40vh; overflow-y: auto; }
+  .search-result-item {
+    padding: 0.625rem 1rem; cursor: pointer;
+    border: 1px solid rgba(255,210,80,0.1); border-top: none;
+    font-size: 1.1rem; background: rgba(10,10,30,0.6);
+  }
+  .search-result-item:first-child { border-top: 1px solid rgba(255,210,80,0.1); }
+  .search-result-item:hover { background: rgba(255,210,80,0.1); }
+  .search-result-item .region { color: var(--gold-dim); font-size: 1rem; }
+  .search-close {
+    margin-top: 1rem; font-family: var(--font-display); font-size: 0.5rem;
+    color: var(--gold-dim); cursor: pointer; border: none; background: none; letter-spacing: 0.05em;
+  }
+  .search-close:hover { color: var(--gold); }
+
+  .loading-text {
+    position: absolute; top: 50%; left: 35%; transform: translate(-50%,-50%);
+    font-family: var(--font-display); font-size: 0.6rem;
+    color: var(--gold); letter-spacing: 0.05em; z-index: 30;
+  }
+
+  .rain-overlay, .snow-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 3; opacity: 0; transition: opacity 0.5s;
+  }
+  .rain-overlay.show, .snow-overlay.show { opacity: 1; }
+  .raindrop { position: absolute; width: 2px; background: rgba(200,220,255,0.5); animation: fall linear infinite; }
+  @keyframes fall { 0% { transform: translateY(-20px); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh); opacity: 0.2; } }
+  .snowflake { position: absolute; color: rgba(255,255,255,0.7); font-size: 0.8rem; animation: snowfall linear infinite; }
+  @keyframes snowfall { 0% { transform: translateY(-10px) rotate(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0.3; } }
+
+  .toast {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(10,10,30,0.8); border: 2px solid var(--gold-dim);
+    padding: 0.5rem 1rem; font-size: 1.1rem; z-index: 40;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="scanline"></div>
+  <div class="rain-overlay" id="rainOverlay"></div>
+  <div class="snow-overlay" id="snowOverlay"></div>
+  <div class="character"><img id="charImg" src="" alt=""></div>
+  <div class="loading-text" id="loadingText">LOADING WEATHER...</div>
+
+  <div class="info-panel" id="infoPanel" style="display:none;">
+    <div class="panel-top"><button class="menu-btn" id="menuBtn">···</button></div>
+    <div class="weather-label" id="weatherLabel">--</div>
+    <div class="temp" id="tempDisplay">--°F</div>
+    <div class="advice-bubble" id="adviceText">Loading...</div>
+    <div class="hourly" id="hourlyRow"></div>
+    <div class="search-location" id="searchBtn">
+      <span>📍</span>
+      <span class="loc-text" id="locationText">LOCATING...</span>
+      <span>🔍</span>
+    </div>
+  </div>
+
+  <div class="search-modal" id="searchModal">
+    <input type="text" id="searchInput" placeholder="Search city..." autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+    <button class="search-close" id="searchClose">PRESS ESC TO CLOSE</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ===== US State abbreviations =====
+const US_STATES = {
+  'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+  'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+  'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+  'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+  'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
+  'Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ',
+  'New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH',
+  'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
+  'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+  'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
+  'District of Columbia':'DC'
+};
+
+// ===== Config =====
+const OUTFIT_MAP = [
+  { max: 20, advice: "Bundle up! It's freezing! 🧣🧥" },
+  { max: 32, advice: "Wear a warm coat and scarf! 🧥" },
+  { max: 50, advice: "Grab a jacket! 🧥" },
+  { max: 68, advice: "Light jacket or hoodie! 👕" },
+  { max: 85, advice: "Light clothes are perfect! 😎" },
+  { max: 999, advice: "Stay cool! Drink water! 🥵" },
+];
+
+const SCENES = {
+  clear: { bg: 'assets/backgrounds/bg-sunny.png', chars: ['assets/characters/sunny-shiba-1.png','assets/characters/sunny-shiba-2.png','assets/characters/sunny-shiba-3.png'], rain: false, snow: false },
+  rain:  { bg: 'assets/backgrounds/bg-rainy.png',  chars: ['assets/characters/rainy-duck-1.png','assets/characters/rainy-duck-2.png','assets/characters/rainy-duck-3.png'], rain: true, snow: false },
+  snow:  { bg: 'assets/backgrounds/bg-snowy.png',  chars: ['assets/characters/snowy-bear-1.png','assets/characters/snowy-bear-2.png','assets/characters/snowy-bear-3.png'], rain: false, snow: true },
+};
+
+function wmoCondition(code) {
+  if (code <= 3) return 'clear';
+  if (code <= 48) return 'clear';
+  if (code <= 67) return 'rain';
+  if (code <= 77) return 'snow';
+  if (code <= 82) return 'rain';
+  if (code <= 86) return 'snow';
+  return 'rain';
+}
+
+function wmoText(code) {
+  if (code === 0) return 'CLEAR SKY';
+  if (code <= 3) return 'PARTLY CLOUDY';
+  if (code <= 48) return 'FOGGY';
+  if (code <= 55) return 'DRIZZLE';
+  if (code <= 67) return 'RAIN';
+  if (code <= 77) return 'SNOW';
+  if (code <= 82) return 'SHOWERS';
+  if (code <= 86) return 'SNOW SHOWERS';
+  return 'THUNDERSTORM';
+}
+
+function wmoEmoji(code) {
+  if (code === 0) return '☀️';
+  if (code <= 3) return '⛅';
+  if (code <= 48) return '🌫';
+  if (code <= 67) return '🌧';
+  if (code <= 77) return '❄️';
+  if (code <= 82) return '🌧';
+  if (code <= 86) return '🌨';
+  return '⛈';
+}
+
+function cToF(c) { return Math.round(c * 9 / 5 + 32); }
+function getAdvice(tempF) { return (OUTFIT_MAP.find(o => tempF < o.max) || OUTFIT_MAP[5]).advice; }
+
+// ===== DOM =====
+const $ = id => document.getElementById(id);
+const scene = $('scene'), charImg = $('charImg');
+const rainOverlay = $('rainOverlay'), snowOverlay = $('snowOverlay');
+const loadingText = $('loadingText'), infoPanel = $('infoPanel');
+const weatherLabel = $('weatherLabel'), tempDisplay = $('tempDisplay');
+const adviceText = $('adviceText'), hourlyRow = $('hourlyRow');
+const locationText = $('locationText');
+const searchModal = $('searchModal'), searchInput = $('searchInput');
+const searchResults = $('searchResults'), toast = $('toast');
+
+// Particles
+for (let i = 0; i < 50; i++) {
+  const d = document.createElement('div');
+  d.className = 'raindrop';
+  Object.assign(d.style, { left: Math.random()*100+'%', height: (8+Math.random()*12)+'px',
+    animationDuration: (0.4+Math.random()*0.4)+'s', animationDelay: Math.random()+'s' });
+  rainOverlay.appendChild(d);
+}
+for (let i = 0; i < 30; i++) {
+  const f = document.createElement('div');
+  f.className = 'snowflake'; f.textContent = '\u2744';
+  Object.assign(f.style, { left: Math.random()*100+'%', fontSize: (0.5+Math.random()*0.7)+'rem',
+    animationDuration: (3+Math.random()*4)+'s', animationDelay: Math.random()*3+'s' });
+  snowOverlay.appendChild(f);
+}
+
+// ===== Animation =====
+let animId = null, animFrame = 0, curChars = [];
+function startAnim(chars) {
+  stopAnim(); curChars = chars; animFrame = 0; charImg.src = chars[0];
+  animId = setInterval(() => { animFrame = (animFrame+1)%chars.length; charImg.src = chars[animFrame]; }, 700);
+}
+function stopAnim() { if (animId) { clearInterval(animId); animId = null; } }
+
+// ===== Render =====
+function renderWeather(data, city) {
+  const cur = data.current;
+  const tempF = cToF(cur.temperature_2m);
+  const code = cur.weather_code;
+  const cond = wmoCondition(code);
+  const sc = SCENES[cond];
+
+  scene.style.backgroundImage = "url('" + sc.bg + "')";
+  startAnim(sc.chars);
+  rainOverlay.classList.toggle('show', sc.rain);
+  snowOverlay.classList.toggle('show', sc.snow);
+
+  weatherLabel.textContent = wmoEmoji(code) + ' ' + wmoText(code);
+  tempDisplay.textContent = tempF + '\u00B0F';
+  adviceText.textContent = getAdvice(tempF);
+  locationText.textContent = city.toUpperCase();
+
+  // Hourly
+  while (hourlyRow.firstChild) hourlyRow.removeChild(hourlyRow.firstChild);
+  const nowH = new Date().getHours();
+  let shown = 0;
+  for (let i = 0; i < data.hourly.time.length && shown < 5; i++) {
+    const h = new Date(data.hourly.time[i]).getHours();
+    if (h < nowH) continue;
+    const item = document.createElement('div');
+    item.className = 'hour-item';
+    const lbl = shown === 0 ? 'NOW' : (h % 12 || 12) + (h >= 12 ? 'PM' : 'AM');
+    const hF = cToF(data.hourly.temperature_2m[i]);
+    const hE = wmoEmoji(data.hourly.weather_code[i]);
+
+    const tDiv = document.createElement('div'); tDiv.className = 'time'; tDiv.textContent = lbl;
+    const iDiv = document.createElement('div'); iDiv.className = 'h-icon'; iDiv.textContent = hE;
+    const tempDiv = document.createElement('div'); tempDiv.className = 'h-temp'; tempDiv.textContent = hF + '\u00B0';
+    item.appendChild(tDiv); item.appendChild(iDiv); item.appendChild(tempDiv);
+    hourlyRow.appendChild(item);
+    shown++;
+  }
+
+  loadingText.style.display = 'none';
+  infoPanel.style.display = 'flex';
+}
+
+// ===== API =====
+async function fetchWeather(lat, lon) {
+  const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+    '&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&forecast_days=1&timezone=auto';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API error');
+  return res.json();
+}
+
+async function geocode(q) {
+  const url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=5&language=en';
+  const res = await fetch(url);
+  if (!res.ok) return { results: [] };
+  return res.json();
+}
+
+// ===== Load =====
+async function loadWeather(lat, lon, city) {
+  try {
+    loadingText.style.display = 'block';
+    loadingText.textContent = 'LOADING WEATHER...';
+    const data = await fetchWeather(lat, lon);
+    renderWeather(data, city);
+  } catch (e) {
+    showToast('Failed to load weather');
+    loadingText.textContent = 'TAP SEARCH TO START';
+    infoPanel.style.display = 'flex';
+    locationText.textContent = 'SEARCH A CITY';
+    scene.style.backgroundImage = "url('" + SCENES.clear.bg + "')";
+    startAnim(SCENES.clear.chars);
+  }
+}
+
+async function reverseGeocode(lat, lon) {
+  try {
+    const url = 'https://geocoding-api.open-meteo.com/v1/search?name=' +
+      lat.toFixed(1) + ',' + lon.toFixed(1) + '&count=1&language=en';
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.results && data.results.length > 0) {
+      const r = data.results[0];
+      const region = r.country_code === 'US' && r.admin1
+        ? (US_STATES[r.admin1] || r.admin1)
+        : (r.admin1 || r.country || '');
+      return r.name + ', ' + region;
+    }
+  } catch {}
+  // Fallback: search by nearby major city using a broader query
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+      '&current=temperature_2m&timezone=auto';
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.timezone) {
+      const parts = data.timezone.split('/');
+      return parts[parts.length - 1].replace(/_/g, ' ');
+    }
+  } catch {}
+  return lat.toFixed(2) + ', ' + lon.toFixed(2);
+}
+
+function initLocation() {
+  if (!navigator.geolocation) {
+    loadWeather(47.61, -122.33, 'Seattle, WA');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const { latitude, longitude } = pos.coords;
+      const cityName = await reverseGeocode(latitude, longitude);
+      loadWeather(latitude, longitude, cityName);
+    },
+    () => { loadWeather(47.61, -122.33, 'Seattle, WA'); showToast('Location unavailable — showing Seattle'); },
+    { timeout: 8000 }
+  );
+}
+
+// ===== Search =====
+let searchTimer = null;
+
+$('searchBtn').addEventListener('click', () => {
+  searchModal.classList.add('open');
+  searchInput.value = '';
+  while (searchResults.firstChild) searchResults.removeChild(searchResults.firstChild);
+  setTimeout(() => searchInput.focus(), 100);
+});
+
+$('searchClose').addEventListener('click', () => searchModal.classList.remove('open'));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') searchModal.classList.remove('open'); });
+searchModal.addEventListener('click', e => { if (e.target === searchModal) searchModal.classList.remove('open'); });
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  const q = searchInput.value.trim();
+  if (q.length < 2) { while (searchResults.firstChild) searchResults.removeChild(searchResults.firstChild); return; }
+
+  searchTimer = setTimeout(async () => {
+    try {
+      const data = await geocode(q);
+      while (searchResults.firstChild) searchResults.removeChild(searchResults.firstChild);
+      if (!data.results || data.results.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'search-result-item';
+        empty.textContent = 'No results found';
+        searchResults.appendChild(empty);
+        return;
+      }
+      data.results.forEach(r => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
+        const citySpan = document.createElement('span');
+        citySpan.textContent = r.name + ' ';
+        const regionSpan = document.createElement('span');
+        regionSpan.className = 'region';
+        regionSpan.textContent = [r.admin1, r.country].filter(Boolean).join(', ');
+        item.appendChild(citySpan);
+        item.appendChild(regionSpan);
+        item.addEventListener('click', () => {
+          searchModal.classList.remove('open');
+          const reg = r.country_code === 'US' && r.admin1
+            ? (US_STATES[r.admin1] || r.admin1) : (r.admin1 || r.country || '');
+          loadWeather(r.latitude, r.longitude, r.name + ', ' + reg);
+        });
+        searchResults.appendChild(item);
+      });
+    } catch {
+      while (searchResults.firstChild) searchResults.removeChild(searchResults.firstChild);
+      const err = document.createElement('div');
+      err.className = 'search-result-item';
+      err.textContent = 'Search failed';
+      searchResults.appendChild(err);
+    }
+  }, 300);
+});
+
+// ===== Toast =====
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ===== Menu =====
+$('menuBtn').addEventListener('click', () => showToast('Settings coming soon'));
+
+// ===== Init =====
+scene.style.backgroundImage = "url('" + SCENES.clear.bg + "')";
+charImg.src = SCENES.clear.chars[0];
+initLocation();
+</script>
+
+</body>
+</html>

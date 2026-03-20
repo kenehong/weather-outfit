@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Outfit — Shiba Run Theme</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Press Start 2P', 'Courier New', monospace;
+    --font-body: 'VT323', 'Courier New', monospace;
+    --gold: oklch(84% 0.19 95);
+    --gold-dim: oklch(70% 0.15 95);
+    --navy: oklch(14% 0.03 275);
+    --navy-light: oklch(20% 0.04 275);
+    --text: oklch(95% 0.03 90);
+    --orange: oklch(52% 0.17 50);
+    --green: oklch(62% 0.18 150);
+    --red: oklch(60% 0.22 30);
+    --shadow: 3px 3px 0 oklch(5% 0.02 280);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body); background: var(--navy); color: var(--text);
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 1.5rem 1rem;
+  }
+
+  .page-header { text-align: center; margin-bottom: 1.25rem; }
+  .page-header h1 {
+    font-family: var(--font-display); font-size: 0.85rem;
+    color: var(--gold); letter-spacing: 0.05em;
+  }
+  .page-header p { font-size: 1rem; opacity: 0.5; margin-top: 0.5rem; }
+
+  /* Controls */
+  .controls {
+    display: flex; gap: 1.5rem; margin-bottom: 1.25rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .control-group { text-align: center; }
+  .control-label {
+    font-family: var(--font-display); font-size: 0.5rem;
+    color: var(--gold-dim); margin-bottom: 0.5rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .btn-row { display: flex; gap: 0.375rem; }
+  .ctrl-btn {
+    border: 2px solid var(--gold-dim); background: transparent; color: var(--text);
+    padding: 0.4rem 0.875rem; border-radius: 0; font-size: 1rem;
+    cursor: pointer; transition: all 0.1s steps(1);
+    font-family: var(--font-body);
+  }
+  .ctrl-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .ctrl-btn.active {
+    background: var(--gold); color: var(--navy);
+    box-shadow: var(--shadow);
+  }
+
+  /* Display frame */
+  .display-frame {
+    width: 1024px; height: 600px;
+    border-radius: 0; overflow: hidden;
+    box-shadow: 4px 4px 0 oklch(5% 0.02 280);
+    border: 3px solid var(--gold);
+    position: relative;
+  }
+
+  /* Scene */
+  .scene {
+    width: 100%; height: 100%;
+    position: relative; overflow: hidden;
+    background-size: cover; background-position: center;
+    transition: filter 1s;
+  }
+  .scene.calm { /* particles off + slower transitions, color unchanged */ }
+  .scene.still { /* all animation stopped, color unchanged */ }
+
+  /* Character */
+  .character {
+    position: absolute; bottom: 6%; left: 38%; transform: translateX(-50%);
+    z-index: 10; width: 220px; height: 220px;
+    image-rendering: pixelated;
+  }
+  .character img {
+    width: 100%; height: 100%; object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  /* ===== Glass panel — Shiba Run pixel style ===== */
+  .info-panel {
+    position: absolute; top: 12px; right: 12px; bottom: 12px;
+    width: 265px;
+    background: rgba(10, 10, 30, 0.55);
+    backdrop-filter: blur(30px) saturate(1.3);
+    -webkit-backdrop-filter: blur(30px) saturate(1.3);
+    border: 2px solid rgba(255, 210, 80, 0.35);
+    border-radius: 0;
+    display: flex; flex-direction: column;
+    padding: 1rem 1.125rem;
+    z-index: 20;
+  }
+
+  /* Menu */
+  .panel-top {
+    display: flex; justify-content: flex-end; margin-bottom: 0.5rem;
+  }
+  .menu-btn {
+    width: 28px; height: 28px; border-radius: 0; border: 2px solid rgba(255,210,80,0.3);
+    background: rgba(255,210,80,0.08); color: var(--gold);
+    font-size: 0.9rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-body); letter-spacing: 2px;
+    transition: all 0.1s;
+  }
+  .menu-btn:hover { background: rgba(255,210,80,0.2); border-color: var(--gold); }
+
+  /* Weather icon row */
+  .weather-icon-row {
+    display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;
+  }
+  .weather-icon-row .icon { font-size: 1.25rem; }
+  .weather-icon-row .label {
+    font-family: var(--font-display); font-size: 0.55rem;
+    color: var(--gold); letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Temperature */
+  .temp {
+    font-family: var(--font-display); font-size: 1.75rem;
+    color: var(--text); line-height: 1;
+    margin-bottom: 0.5rem; letter-spacing: 0.02em;
+    text-shadow: 2px 2px 0 oklch(5% 0.02 280);
+  }
+
+  /* Advice bubble */
+  .advice-bubble {
+    background: rgba(255,210,80,0.08);
+    border: 2px solid rgba(255,210,80,0.2);
+    border-radius: 0;
+    padding: 0.625rem 0.75rem;
+    font-size: 1.25rem; line-height: 1.5;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+
+  /* Hourly */
+  .hourly {
+    display: flex; justify-content: space-between; text-align: center;
+    margin-bottom: 0.75rem;
+    border-top: 1px solid rgba(255,210,80,0.15);
+    border-bottom: 1px solid rgba(255,210,80,0.15);
+    padding: 0.5rem 0;
+  }
+  .hour-item .time {
+    font-family: var(--font-display); font-size: 0.4rem;
+    color: var(--gold-dim); letter-spacing: 0.03em;
+  }
+  .hour-item .h-icon { font-size: 1.1rem; margin: 0.25rem 0; }
+
+  /* Search / Location */
+  .search-location {
+    margin-top: auto;
+    display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(255,210,80,0.06);
+    border: 2px solid rgba(255,210,80,0.2);
+    border-radius: 0;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer; transition: all 0.1s;
+  }
+  .search-location:hover {
+    background: rgba(255,210,80,0.12);
+    border-color: rgba(255,210,80,0.4);
+  }
+  .search-location .pin { font-size: 0.9rem; }
+  .search-location .loc-text {
+    font-family: var(--font-display); font-size: 0.45rem;
+    color: var(--gold); flex: 1; letter-spacing: 0.03em;
+  }
+  .search-location .search-icon { font-size: 0.85rem; opacity: 0.5; }
+
+  /* Weather data visibility */
+  .weather-data { display: none; }
+  .weather-data.active { display: block; }
+
+  /* ===== Overlays ===== */
+  .rain-overlay, .snow-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 3; opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .rain-overlay.show, .snow-overlay.show { opacity: 1; }
+
+  .raindrop {
+    position: absolute; width: 2px; background: rgba(200,220,255,0.5);
+    border-radius: 0; animation: fall linear infinite;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-20px); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(620px); opacity: 0.2; }
+  }
+
+  .rain-static-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 3; opacity: 0;
+    background: repeating-linear-gradient(
+      170deg, transparent, transparent 18px,
+      rgba(200,220,255,0.08) 18px, rgba(200,220,255,0.08) 19px
+    );
+    transition: opacity 0.5s;
+  }
+  .rain-static-overlay.show { opacity: 1; }
+
+  .snowflake {
+    position: absolute; color: rgba(255,255,255,0.7); font-size: 0.8rem;
+    animation: snowfall linear infinite;
+  }
+  @keyframes snowfall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(620px) rotate(360deg); opacity: 0.3; }
+  }
+
+  /* Transition notice */
+  .trans-notice {
+    position: absolute; top: 50%; left: 35%; transform: translate(-50%,-50%);
+    background: rgba(10,10,30,0.7);
+    border: 2px solid var(--gold);
+    padding: 0.75rem 1.5rem;
+    font-family: var(--font-display); font-size: 0.5rem;
+    color: var(--gold); letter-spacing: 0.05em;
+    z-index: 30; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    box-shadow: var(--shadow);
+  }
+  .trans-notice.show { opacity: 1; }
+
+  /* Scanline overlay */
+  .scanline {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      transparent 0 2px,
+      rgba(0,0,0,0.04) 2px 4px
+    );
+    pointer-events: none; z-index: 15;
+  }
+
+  /* Scale */
+  @media (max-width: 1100px) {
+    .display-frame { transform: scale(0.85); transform-origin: top center; }
+  }
+  @media (max-width: 900px) {
+    .display-frame { transform: scale(0.65); transform-origin: top center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>WEATHER OUTFIT</h1>
+  <p>Shiba Run Theme · Level 2 · Pixel Art</p>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <div class="control-label">WEATHER</div>
+    <div class="btn-row">
+      <button class="ctrl-btn active" data-weather="sunny">☀️ SUNNY</button>
+      <button class="ctrl-btn" data-weather="rainy">🌧 RAINY</button>
+      <button class="ctrl-btn" data-weather="snowy">❄️ SNOWY</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="control-label">SENSORY</div>
+    <div class="btn-row">
+      <button class="ctrl-btn active" data-sensory="standard">☀️ STD</button>
+      <button class="ctrl-btn" data-sensory="calm">🌙 CALM</button>
+      <button class="ctrl-btn" data-sensory="still">⏸️ STILL</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="control-label">ANIM</div>
+    <div class="btn-row">
+      <button class="ctrl-btn" id="animToggle">▶ PLAY</button>
+    </div>
+  </div>
+</div>
+
+<div class="display-frame">
+  <div class="scene" id="scene" style="background-image: url('assets/backgrounds/bg-sunny.png');">
+
+    <!-- Scanline -->
+    <div class="scanline"></div>
+
+    <!-- Overlays -->
+    <div class="rain-overlay" id="rainOverlay"></div>
+    <div class="rain-static-overlay" id="rainStatic"></div>
+    <div class="snow-overlay" id="snowOverlay"></div>
+
+    <!-- Character -->
+    <div class="character" id="character">
+      <img id="charImg" src="assets/characters/sunny-shiba-1.png" alt="Weather character">
+    </div>
+
+    <!-- Transition notice -->
+    <div class="trans-notice" id="transNotice">WEATHER IS CHANGING...</div>
+
+    <!-- Glass Panel -->
+    <div class="info-panel">
+      <div class="panel-top">
+        <button class="menu-btn" id="menuBtn">···</button>
+      </div>
+
+      <!-- Sunny -->
+      <div class="weather-data active" id="dataSunny">
+        <div class="weather-icon-row"><span class="icon">☀️</span><span class="label">SUNNY</span></div>
+        <div class="temp">75°F</div>
+        <div class="advice-bubble">Light clothes are perfect! Stay cool 😎</div>
+        <div class="hourly">
+          <div class="hour-item"><div class="time">9AM</div><div class="h-icon">☀️</div></div>
+          <div class="hour-item"><div class="time">12PM</div><div class="h-icon">☀️</div></div>
+          <div class="hour-item"><div class="time">3PM</div><div class="h-icon">⛅</div></div>
+          <div class="hour-item"><div class="time">6PM</div><div class="h-icon">🌙</div></div>
+        </div>
+      </div>
+
+      <!-- Rainy -->
+      <div class="weather-data" id="dataRainy">
+        <div class="weather-icon-row"><span class="icon">🌧</span><span class="label">RAIN</span></div>
+        <div class="temp">48°F</div>
+        <div class="advice-bubble">Grab a jacket and umbrella! 🧥☂️</div>
+        <div class="hourly">
+          <div class="hour-item"><div class="time">9AM</div><div class="h-icon">⛅</div></div>
+          <div class="hour-item"><div class="time">12PM</div><div class="h-icon">🌧</div></div>
+          <div class="hour-item"><div class="time">3PM</div><div class="h-icon">🌧</div></div>
+          <div class="hour-item"><div class="time">6PM</div><div class="h-icon">🌙</div></div>
+        </div>
+      </div>
+
+      <!-- Snowy -->
+      <div class="weather-data" id="dataSnowy">
+        <div class="weather-icon-row"><span class="icon">❄️</span><span class="label">SNOW</span></div>
+        <div class="temp">28°F</div>
+        <div class="advice-bubble">Bundle up warm! Scarf and coat! 🧣🧥</div>
+        <div class="hourly">
+          <div class="hour-item"><div class="time">9AM</div><div class="h-icon">❄️</div></div>
+          <div class="hour-item"><div class="time">12PM</div><div class="h-icon">🌨</div></div>
+          <div class="hour-item"><div class="time">3PM</div><div class="h-icon">❄️</div></div>
+          <div class="hour-item"><div class="time">6PM</div><div class="h-icon">🌙</div></div>
+        </div>
+      </div>
+
+      <!-- Location + Search -->
+      <div class="search-location">
+        <span class="pin">📍</span>
+        <span class="loc-text">SEATTLE, WA</span>
+        <span class="search-icon">🔍</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const weatherConfig = {
+    sunny: {
+      bg: 'assets/backgrounds/bg-sunny.png',
+      chars: ['assets/characters/sunny-shiba-1.png','assets/characters/sunny-shiba-2.png','assets/characters/sunny-shiba-3.png'],
+      rain: false, snow: false
+    },
+    rainy: {
+      bg: 'assets/backgrounds/bg-rainy.png',
+      chars: ['assets/characters/rainy-duck-1.png','assets/characters/rainy-duck-2.png','assets/characters/rainy-duck-3.png'],
+      rain: true, snow: false
+    },
+    snowy: {
+      bg: 'assets/backgrounds/bg-snowy.png',
+      chars: ['assets/characters/snowy-bear-1.png','assets/characters/snowy-bear-2.png','assets/characters/snowy-bear-3.png'],
+      rain: false, snow: true
+    }
+  };
+
+  let currentWeather = 'sunny';
+  let currentSensory = 'standard';
+  let animInterval = null;
+  let currentFrame = 0;
+
+  const scene = document.getElementById('scene');
+  const charImg = document.getElementById('charImg');
+  const rainOverlay = document.getElementById('rainOverlay');
+  const rainStatic = document.getElementById('rainStatic');
+  const snowOverlay = document.getElementById('snowOverlay');
+  const transNotice = document.getElementById('transNotice');
+  const animToggle = document.getElementById('animToggle');
+
+  // Rain
+  for (let i = 0; i < 40; i++) {
+    const d = document.createElement('div');
+    d.className = 'raindrop';
+    d.style.left = (Math.random()*100)+'%';
+    d.style.height = (8+Math.random()*10)+'px';
+    d.style.animationDuration = (0.5+Math.random()*0.5)+'s';
+    d.style.animationDelay = (Math.random())+'s';
+    rainOverlay.appendChild(d);
+  }
+
+  // Snow
+  for (let i = 0; i < 25; i++) {
+    const f = document.createElement('div');
+    f.className = 'snowflake';
+    f.textContent = '❄';
+    f.style.left = (Math.random()*100)+'%';
+    f.style.fontSize = (0.5+Math.random()*0.6)+'rem';
+    f.style.animationDuration = (3+Math.random()*3)+'s';
+    f.style.animationDelay = (Math.random()*3)+'s';
+    snowOverlay.appendChild(f);
+  }
+
+  // Weather switch
+  document.querySelectorAll('[data-weather]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.weather === currentWeather) return;
+      document.querySelectorAll('[data-weather]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      transNotice.classList.add('show');
+      setTimeout(() => {
+        transNotice.classList.remove('show');
+        currentWeather = btn.dataset.weather;
+        currentFrame = 0;
+        updateWeather();
+      }, currentSensory === 'still' ? 500 : 1500);
+    });
+  });
+
+  // Sensory switch
+  document.querySelectorAll('[data-sensory]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-sensory]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSensory = btn.dataset.sensory;
+      updateSensory();
+    });
+  });
+
+  // Anim toggle
+  animToggle.addEventListener('click', () => {
+    if (animInterval) {
+      clearInterval(animInterval); animInterval = null;
+      animToggle.textContent = '▶ PLAY';
+      animToggle.classList.remove('active');
+    } else {
+      const speed = currentSensory==='calm'?1000:currentSensory==='still'?0:600;
+      if (speed===0) return;
+      animInterval = setInterval(() => {
+        const c = weatherConfig[currentWeather];
+        currentFrame = (currentFrame+1)%c.chars.length;
+        charImg.src = c.chars[currentFrame];
+      }, speed);
+      animToggle.textContent = '⏸ STOP';
+      animToggle.classList.add('active');
+    }
+  });
+
+  // Menu
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    alert('Settings: Sensory Profile, Location, etc.');
+  });
+
+  function updateWeather() {
+    const c = weatherConfig[currentWeather];
+    scene.style.backgroundImage = `url('${c.bg}')`;
+    charImg.src = c.chars[0]; currentFrame = 0;
+    if (animInterval) {
+      clearInterval(animInterval); animInterval=null;
+      animToggle.textContent='▶ PLAY'; animToggle.classList.remove('active');
+    }
+    document.querySelectorAll('.weather-data').forEach(d => d.classList.remove('active'));
+    document.getElementById(`data${currentWeather.charAt(0).toUpperCase()+currentWeather.slice(1)}`).classList.add('active');
+    updateSensory();
+  }
+
+  function updateSensory() {
+    const c = weatherConfig[currentWeather];
+    scene.classList.remove('calm','still');
+    if (currentSensory==='calm') scene.classList.add('calm');
+    if (currentSensory==='still') scene.classList.add('still');
+    rainOverlay.classList.toggle('show', c.rain && currentSensory==='standard');
+    rainStatic.classList.toggle('show', c.rain && currentSensory==='calm');
+    snowOverlay.classList.toggle('show', c.snow && currentSensory==='standard');
+    if (currentSensory==='still' && animInterval) {
+      clearInterval(animInterval); animInterval=null;
+      animToggle.textContent='▶ PLAY'; animToggle.classList.remove('active');
+    }
+  }
+
+  updateWeather();
+</script>
+
+</body>
+</html>

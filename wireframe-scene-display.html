@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Outfit — Scene Concept (Smart Display)</title>
+<style>
+  :root {
+    --font: -apple-system, 'Pretendard', 'Segoe UI', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: #1a1a2e; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 0.9rem; opacity: 0.6; margin-bottom: 2rem; }
+
+  /* Device selector */
+  .device-nav {
+    display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; justify-content: center;
+  }
+  .device-btn {
+    border: 2px solid rgba(255,255,255,0.2); background: transparent; color: #fff;
+    padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; font-family: var(--font);
+  }
+  .device-btn:hover { border-color: rgba(255,255,255,0.5); }
+  .device-btn.active { background: #667eea; border-color: #667eea; }
+  .device-btn .size { font-weight: 400; opacity: 0.7; font-size: 0.7rem; }
+
+  /* Display frame */
+  .display-frame {
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.4);
+    border: 6px solid #333;
+    transition: width 0.4s, height 0.4s;
+    position: relative;
+  }
+
+  /* Scene variations */
+  .scene-nav {
+    display: flex; gap: 0.5rem; margin: 1.5rem 0 1rem; flex-wrap: wrap; justify-content: center;
+  }
+  .scene-btn {
+    border: 2px solid rgba(255,255,255,0.15); background: transparent; color: #fff;
+    padding: 0.4rem 0.875rem; border-radius: 999px; font-size: 0.8rem;
+    cursor: pointer; transition: all 0.2s; font-family: var(--font);
+  }
+  .scene-btn:hover { border-color: rgba(255,255,255,0.4); }
+  .scene-btn.active { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+
+  /* ===== Scene screen (landscape smart display) ===== */
+  .scene-screen {
+    width: 100%; height: 100%;
+    display: flex; position: relative; overflow: hidden;
+    transition: background 0.6s;
+  }
+
+  /* --- Rainy scene --- */
+  .scene-rainy { background: linear-gradient(180deg, #4a5568 0%, #718096 40%, #5a7a5e 75%, #3d6b4a 100%); }
+  .scene-rainy .scene-area { position: relative; flex: 1; }
+  .rain-drop {
+    position: absolute; width: 2px; background: rgba(255,255,255,0.35);
+    border-radius: 2px; animation: rain-fall linear infinite;
+  }
+  @keyframes rain-fall { 0% { transform: translateY(-20px); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(600px); opacity: 0.2; } }
+
+  /* --- Sunny scene --- */
+  .scene-sunny { background: linear-gradient(180deg, #56b4e9 0%, #87CEEB 30%, #98d187 70%, #6abf69 100%); }
+  .scene-sunny .sun {
+    position: absolute; top: 8%; right: 15%; width: 80px; height: 80px;
+    background: radial-gradient(circle, #FFE066 30%, rgba(255,224,102,0) 70%);
+    border-radius: 50%; animation: pulse-sun 3s ease-in-out infinite;
+  }
+  .scene-sunny .sun-core {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 40px; height: 40px; background: #FFD93D; border-radius: 50%;
+  }
+  @keyframes pulse-sun { 0%,100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.1); opacity: 1; } }
+
+  /* --- Snowy scene --- */
+  .scene-snowy { background: linear-gradient(180deg, #b0bec5 0%, #cfd8dc 40%, #e8eaec 70%, #f5f5f5 100%); }
+  .snowflake {
+    position: absolute; color: rgba(255,255,255,0.8); font-size: 0.9rem;
+    animation: snow-fall linear infinite;
+  }
+  @keyframes snow-fall { 0% { transform: translateY(-10px) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(500px) rotate(360deg); opacity: 0.3; } }
+
+  /* --- Night clear scene --- */
+  .scene-night { background: linear-gradient(180deg, #0f0c29 0%, #1a1a3e 30%, #24243e 60%, #2d3a4a 100%); }
+  .star {
+    position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%;
+    animation: twinkle 2s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+  .moon {
+    position: absolute; top: 10%; right: 12%; width: 50px; height: 50px;
+    background: #f0e68c; border-radius: 50%;
+    box-shadow: 0 0 20px rgba(240,230,140,0.4);
+  }
+  .moon-shadow {
+    position: absolute; top: -5px; left: 8px; width: 45px; height: 45px;
+    background: #1a1a3e; border-radius: 50%;
+  }
+
+  /* Common scene elements */
+  .ground {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 28%;
+  }
+  .scene-rainy .ground { background: linear-gradient(180deg, #3d6b4a, #2d5a3a); }
+  .scene-sunny .ground { background: linear-gradient(180deg, #6abf69, #4a9f49); }
+  .scene-snowy .ground { background: linear-gradient(180deg, #e0e5ec, #d0d5dc); }
+  .scene-night .ground { background: linear-gradient(180deg, #1a2a1e, #0f1a12); }
+
+  .character-spot {
+    position: absolute; bottom: 28%; left: 50%; transform: translateX(-50%);
+    z-index: 10; text-align: center;
+  }
+  .character-box {
+    width: 140px; height: 180px; border-radius: 20px;
+    background: rgba(255,255,255,0.15); backdrop-filter: blur(6px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; border: 2px dashed rgba(255,255,255,0.3);
+  }
+  .character-box .emoji { font-size: 4rem; }
+  .character-box span { font-size: 0.65rem; color: rgba(255,255,255,0.6); }
+
+  .tree { position: absolute; bottom: 25%; font-size: 2.5rem; z-index: 5; }
+
+  .puddle {
+    position: absolute; bottom: 26%; width: 60px; height: 10px;
+    background: rgba(100,150,200,0.3); border-radius: 50%; z-index: 4;
+  }
+
+  .snowman { position: absolute; bottom: 28%; font-size: 2.5rem; z-index: 5; }
+
+  /* Info panel (right side) */
+  .info-panel {
+    width: 280px; flex-shrink: 0;
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(16px);
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    z-index: 20;
+  }
+  .info-panel .location {
+    font-size: 0.8rem; opacity: 0.6; margin-bottom: 0.25rem;
+    letter-spacing: 0.05em;
+  }
+  .info-panel .advice {
+    font-size: 1.4rem; font-weight: 700; line-height: 1.3;
+    margin-bottom: 1rem;
+  }
+  .info-panel .weather-row {
+    display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.8;
+    margin-bottom: 1.25rem;
+  }
+  .info-panel .temp-big {
+    font-size: 2.5rem; font-weight: 200; margin-bottom: 0.25rem;
+  }
+  .info-panel .condition {
+    font-size: 0.85rem; opacity: 0.7; margin-bottom: 1.5rem;
+  }
+  .info-panel .search-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(255,255,255,0.1); border-radius: 12px;
+    padding: 0.625rem 0.875rem; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .info-panel .search-bar:hover { background: rgba(255,255,255,0.18); }
+  .info-panel .search-bar span { font-size: 0.85rem; opacity: 0.5; }
+  .info-panel .search-icon { font-size: 0.9rem; }
+
+  /* Scene label */
+  .scene-label {
+    position: absolute; top: 1rem; left: 1rem;
+    background: rgba(0,0,0,0.3); backdrop-filter: blur(8px);
+    padding: 0.375rem 0.75rem; border-radius: 8px;
+    font-size: 0.7rem; opacity: 0.7; z-index: 20;
+  }
+
+  /* Notes section */
+  .notes {
+    max-width: 800px; margin-top: 2.5rem; padding: 1.5rem;
+    background: rgba(255,255,255,0.05); border-radius: 16px;
+    font-size: 0.85rem; line-height: 1.6;
+  }
+  .notes h3 { font-size: 1rem; margin-bottom: 0.75rem; }
+  .notes ul { padding-left: 1.25rem; }
+  .notes li { margin-bottom: 0.5rem; opacity: 0.8; }
+  .notes .highlight { color: #90caf9; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Weather Outfit — Scene Concept</h1>
+<p class="subtitle">Smart Display Layout (Landscape)</p>
+
+<nav class="device-nav">
+  <button class="device-btn active" data-w="1024" data-h="600">Nest Hub <span class="size">1024×600</span></button>
+  <button class="device-btn" data-w="1280" data-h="800">Echo Show 8 <span class="size">1280×800</span></button>
+  <button class="device-btn" data-w="960" data-h="480">Echo Show 5 <span class="size">960×480</span></button>
+  <button class="device-btn" data-w="1920" data-h="1080">Echo Show 15 <span class="size">1920×1080</span></button>
+</nav>
+
+<div class="display-frame" id="displayFrame" style="width:1024px;height:600px;">
+  <!-- Rainy scene (default) -->
+  <div class="scene-screen scene-rainy" id="sceneRainy" style="display:flex;">
+    <div class="scene-area">
+      <div class="scene-label">Rainy · Afternoon</div>
+      <div class="rain-drop" style="left:8%;height:14px;animation-duration:0.7s;animation-delay:0.1s;"></div>
+      <div class="rain-drop" style="left:15%;height:10px;animation-duration:0.85s;animation-delay:0.3s;"></div>
+      <div class="rain-drop" style="left:22%;height:16px;animation-duration:0.65s;animation-delay:0s;"></div>
+      <div class="rain-drop" style="left:30%;height:12px;animation-duration:0.8s;animation-delay:0.2s;"></div>
+      <div class="rain-drop" style="left:38%;height:11px;animation-duration:0.75s;animation-delay:0.15s;"></div>
+      <div class="rain-drop" style="left:45%;height:15px;animation-duration:0.7s;animation-delay:0.4s;"></div>
+      <div class="rain-drop" style="left:53%;height:9px;animation-duration:0.9s;animation-delay:0.05s;"></div>
+      <div class="rain-drop" style="left:60%;height:13px;animation-duration:0.72s;animation-delay:0.25s;"></div>
+      <div class="rain-drop" style="left:68%;height:10px;animation-duration:0.88s;animation-delay:0.1s;"></div>
+      <div class="rain-drop" style="left:75%;height:14px;animation-duration:0.68s;animation-delay:0.35s;"></div>
+      <div class="tree" style="left:8%;">🌲</div>
+      <div class="tree" style="left:25%;">🌳</div>
+      <div class="tree" style="right:22%;">🌲</div>
+      <div class="character-spot">
+        <div class="character-box">
+          <span class="emoji">☂️</span>
+          <span>Gemini character</span>
+        </div>
+      </div>
+      <div class="puddle" style="left:20%;"></div>
+      <div class="puddle" style="left:60%;"></div>
+      <div class="ground"></div>
+    </div>
+    <div class="info-panel">
+      <div class="location">SEATTLE, WA</div>
+      <div class="advice">Don't forget your umbrella! ☔</div>
+      <div class="temp-big">48°F</div>
+      <div class="condition">🌧 Rainy · Feels like 44°F</div>
+      <div class="weather-row">
+        <span>💧 82%</span>
+        <span>💨 12 mph</span>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <span>Search other places...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sunny scene -->
+  <div class="scene-screen scene-sunny" id="sceneSunny" style="display:none;">
+    <div class="scene-area">
+      <div class="scene-label">Sunny · Morning</div>
+      <div class="sun"><div class="sun-core"></div></div>
+      <div class="tree" style="left:10%;">🌴</div>
+      <div class="tree" style="left:28%;">🌻</div>
+      <div class="tree" style="right:20%;">🌴</div>
+      <div class="character-spot">
+        <div class="character-box">
+          <span class="emoji">😎</span>
+          <span>Gemini character</span>
+        </div>
+      </div>
+      <div class="ground"></div>
+    </div>
+    <div class="info-panel">
+      <div class="location">LOS ANGELES, CA</div>
+      <div class="advice">Stay cool! Light clothes are perfect! 😄</div>
+      <div class="temp-big">82°F</div>
+      <div class="condition">☀️ Sunny · Feels like 85°F</div>
+      <div class="weather-row">
+        <span>💧 35%</span>
+        <span>💨 5 mph</span>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <span>Search other places...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snowy scene -->
+  <div class="scene-screen scene-snowy" id="sceneSnowy" style="display:none;">
+    <div class="scene-area">
+      <div class="scene-label" style="color:#555;">Snowy · Evening</div>
+      <div class="snowflake" style="left:10%;animation-duration:3s;animation-delay:0s;">❄</div>
+      <div class="snowflake" style="left:20%;animation-duration:4s;animation-delay:1s;">❄</div>
+      <div class="snowflake" style="left:35%;animation-duration:3.5s;animation-delay:0.5s;">❄</div>
+      <div class="snowflake" style="left:48%;animation-duration:4.5s;animation-delay:1.5s;">❄</div>
+      <div class="snowflake" style="left:60%;animation-duration:3.2s;animation-delay:0.3s;">❄</div>
+      <div class="snowflake" style="left:72%;animation-duration:3.8s;animation-delay:0.8s;">❄</div>
+      <div class="snowflake" style="left:55%;animation-duration:4.2s;animation-delay:2s;">❄</div>
+      <div class="snowflake" style="left:82%;animation-duration:3.6s;animation-delay:1.2s;">❄</div>
+      <div class="tree" style="left:10%;">🌲</div>
+      <div class="tree" style="right:25%;">🌲</div>
+      <div class="snowman" style="left:25%;">⛄</div>
+      <div class="character-spot">
+        <div class="character-box" style="border-color:rgba(0,0,0,0.15);">
+          <span class="emoji">🧣</span>
+          <span style="color:rgba(0,0,0,0.4);">Gemini character</span>
+        </div>
+      </div>
+      <div class="ground"></div>
+    </div>
+    <div class="info-panel">
+      <div class="location">MINNEAPOLIS, MN</div>
+      <div class="advice">Bundle up! It's freezing! 🥶</div>
+      <div class="temp-big">18°F</div>
+      <div class="condition">❄️ Snow · Feels like 8°F</div>
+      <div class="weather-row">
+        <span>💧 90%</span>
+        <span>💨 15 mph</span>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <span>Search other places...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Night scene -->
+  <div class="scene-screen scene-night" id="sceneNight" style="display:none;">
+    <div class="scene-area">
+      <div class="scene-label">Clear Night</div>
+      <div class="star" style="top:8%;left:15%;animation-delay:0s;"></div>
+      <div class="star" style="top:12%;left:35%;animation-delay:0.5s;width:2px;height:2px;"></div>
+      <div class="star" style="top:5%;left:55%;animation-delay:1s;"></div>
+      <div class="star" style="top:18%;left:70%;animation-delay:0.3s;width:2px;height:2px;"></div>
+      <div class="star" style="top:10%;left:25%;animation-delay:0.8s;"></div>
+      <div class="star" style="top:15%;left:48%;animation-delay:1.2s;width:4px;height:4px;"></div>
+      <div class="star" style="top:7%;left:80%;animation-delay:0.6s;"></div>
+      <div class="star" style="top:22%;left:60%;animation-delay:0.2s;width:2px;height:2px;"></div>
+      <div class="moon"><div class="moon-shadow"></div></div>
+      <div class="tree" style="left:12%;color:rgba(255,255,255,0.2);font-size:2rem;">🌲</div>
+      <div class="tree" style="right:18%;color:rgba(255,255,255,0.2);font-size:2rem;">🌲</div>
+      <div class="character-spot">
+        <div class="character-box">
+          <span class="emoji">🌙</span>
+          <span>Gemini character</span>
+        </div>
+      </div>
+      <div class="ground"></div>
+    </div>
+    <div class="info-panel">
+      <div class="location">SEATTLE, WA</div>
+      <div class="advice">Cool night! Grab a light jacket 🧥</div>
+      <div class="temp-big">55°F</div>
+      <div class="condition">🌙 Clear · Feels like 52°F</div>
+      <div class="weather-row">
+        <span>💧 60%</span>
+        <span>💨 7 mph</span>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <span>Search other places...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="scene-nav">
+  <button class="scene-btn active" data-scene="Rainy">🌧 Rainy</button>
+  <button class="scene-btn" data-scene="Sunny">☀️ Sunny</button>
+  <button class="scene-btn" data-scene="Snowy">❄️ Snowy</button>
+  <button class="scene-btn" data-scene="Night">🌙 Night</button>
+</nav>
+
+<div class="notes">
+  <h3>Design Notes</h3>
+  <ul>
+    <li><span class="highlight">Layout</span>: Scene (left ~70%) + Info Panel (right ~30%). Landscape optimized for smart displays.</li>
+    <li><span class="highlight">Character</span>: Centered in the scene. Gemini-generated images (PNG, transparent bg) will replace the placeholder.</li>
+    <li><span class="highlight">Info Panel</span>: Always visible on the right. Shows advice text, temperature, condition, and search.</li>
+    <li><span class="highlight">Scenes needed</span>: At minimum 4 (sunny, cloudy, rainy, snowy). Each with day/night variant = 8 CSS themes.</li>
+    <li><span class="highlight">Character images needed</span>: 6 outfits × weather overlay (umbrella/scarf) = ~8-10 images from Gemini.</li>
+    <li><span class="highlight">Smart Display deployment</span>: Can run as a fullscreen web app via the device's built-in browser (Silk on Echo, Chrome on Nest Hub via kiosk mode).</li>
+  </ul>
+</div>
+
+<script>
+  // Device switching
+  const frame = document.getElementById('displayFrame');
+  const deviceBtns = document.querySelectorAll('.device-btn');
+  deviceBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      deviceBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const w = parseInt(btn.dataset.w);
+      const h = parseInt(btn.dataset.h);
+      // Scale down if too wide for viewport
+      const maxW = window.innerWidth - 40;
+      const scale = w > maxW ? maxW / w : 1;
+      frame.style.width = w + 'px';
+      frame.style.height = h + 'px';
+      frame.style.transform = scale < 1 ? `scale(${scale})` : 'none';
+      frame.style.transformOrigin = 'top center';
+    });
+  });
+
+  // Scene switching
+  const scenes = document.querySelectorAll('.scene-screen');
+  const sceneBtns = document.querySelectorAll('.scene-btn');
+  sceneBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      sceneBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      scenes.forEach(s => s.style.display = 'none');
+      document.getElementById(`scene${btn.dataset.scene}`).style.display = 'flex';
+    });
+  });
+
+  // Auto-scale on load
+  window.addEventListener('load', () => {
+    const activeBtn = document.querySelector('.device-btn.active');
+    activeBtn.click();
+  });
+</script>
+
+</body>
+</html>
