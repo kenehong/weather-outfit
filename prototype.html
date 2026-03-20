@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Outfit — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Press Start 2P', monospace;
+    --font-body: 'VT323', monospace;
+    --gold: oklch(84% 0.19 95);
+    --gold-dim: oklch(70% 0.15 95);
+    --navy: oklch(14% 0.03 275);
+    --navy-light: oklch(18% 0.03 275);
+    --text: oklch(95% 0.03 90);
+    --text-dim: oklch(70% 0.03 90);
+    --border: rgba(255,210,80,0.15);
+    --border-active: rgba(255,210,80,0.6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-body); background: var(--navy); color: var(--text);
+    height: 100vh; overflow: hidden;
+  }
+
+  .main-layout { display: flex; height: 100vh; }
+
+  /* ===== Left sidebar ===== */
+  .sidebar {
+    width: 260px; min-width: 260px;
+    padding: 1rem; overflow-y: auto;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 0.75rem;
+  }
+
+  /* Project brief */
+  .brief {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .brief-title {
+    font-family: var(--font-display); font-size: 0.5rem;
+    color: var(--gold); letter-spacing: 0.05em; margin-bottom: 0.5rem;
+  }
+  .brief-desc {
+    font-size: 1.1rem; line-height: 1.5; color: var(--text-dim);
+  }
+  .brief-tag {
+    display: inline-block; margin-top: 0.4rem; margin-right: 0.25rem;
+    font-size: 0.8rem; padding: 0.15rem 0.4rem;
+    border: 1px solid var(--border);
+    color: var(--gold-dim);
+  }
+
+  /* Section label */
+  .section-label {
+    font-family: var(--font-display); font-size: 0.35rem;
+    color: var(--gold-dim); letter-spacing: 0.08em;
+    text-transform: uppercase; margin-top: 0.25rem;
+  }
+
+  /* Character cards */
+  .states-grid {
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .state-card {
+    background: var(--navy-light);
+    border: 2px solid rgba(255,210,80,0.2);
+    padding: 0.5rem 0.6rem;
+    display: flex; align-items: center; gap: 0.6rem;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .state-card:hover { border-color: var(--gold); }
+  .state-card.active { border-color: var(--border-active); box-shadow: 0 0 12px rgba(255,210,80,0.1); }
+
+  .card-info { flex: 1; min-width: 0; }
+  .state-label {
+    font-family: var(--font-display); font-size: 0.35rem;
+    color: var(--gold); letter-spacing: 0.05em; margin-bottom: 0.15rem;
+  }
+  .state-temp { font-size: 0.9rem; color: var(--gold-dim); }
+  .state-outfit { font-size: 0.8rem; color: var(--text); opacity: 0.6; line-height: 1.3; }
+
+  .char-preview {
+    width: 56px; height: 56px; min-width: 56px; position: relative;
+    image-rendering: pixelated;
+  }
+  .char-preview img {
+    width: 100%; height: 100%; object-fit: contain;
+    image-rendering: pixelated; position: absolute; top: 0; left: 0;
+  }
+
+  /* Sensory modes */
+  .sensory-section {
+    padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+  .sensory-modes {
+    display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.35rem;
+  }
+  .sensory-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.4rem 0.5rem; cursor: pointer;
+    border: 2px solid rgba(255,210,80,0.15);
+    background: transparent; color: var(--text); font-family: var(--font-body);
+    font-size: 0.95rem; text-align: left; transition: border-color 0.2s;
+  }
+  .sensory-btn:hover { border-color: var(--gold-dim); }
+  .sensory-btn.active { border-color: var(--border-active); background: rgba(255,210,80,0.06); }
+  .sensory-icon { font-size: 1.1rem; width: 1.5rem; text-align: center; }
+  .sensory-name {
+    font-family: var(--font-display); font-size: 0.3rem;
+    color: var(--gold); letter-spacing: 0.05em;
+  }
+  .sensory-desc { font-size: 0.8rem; color: var(--text-dim); }
+
+  /* Speed control in sidebar */
+  .speed-section {
+    padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+  .speed-row {
+    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem;
+  }
+  .speed-row input[type="range"] { flex: 1; accent-color: var(--gold); }
+  .speed-val { font-size: 0.9rem; color: var(--gold); min-width: 40px; }
+
+  /* ===== Right content — preview ===== */
+  .content {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .full-preview {
+    position: relative; width: 100%; flex: 1;
+    background-size: cover; background-position: center bottom;
+    overflow: hidden; transition: background-image 0.5s, filter 0.5s;
+  }
+  .full-preview .scanline {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,0.03) 2px 4px);
+    pointer-events: none; z-index: 5;
+  }
+  .full-preview .character {
+    position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
+    height: 55%; aspect-ratio: 1; image-rendering: pixelated; z-index: 3;
+  }
+  .full-preview .character img {
+    width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated;
+  }
+  .full-preview .rain-overlay, .full-preview .snow-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.5s;
+  }
+  .full-preview .rain-overlay.show, .full-preview .snow-overlay.show { opacity: 1; }
+  .raindrop { position: absolute; width: 2px; background: rgba(200,220,255,0.5); animation: fall linear infinite; }
+  @keyframes fall { 0% { transform: translateY(-20px); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh); opacity: 0.2; } }
+  .snowflake { position: absolute; color: rgba(255,255,255,0.7); font-size: 0.8rem; animation: snowfall linear infinite; }
+  @keyframes snowfall { 0% { transform: translateY(-10px) rotate(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0.3; } }
+
+
+  .preview-info {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(10,10,30,0.6); backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,210,80,0.3);
+    padding: 0.75rem 1rem; z-index: 10;
+  }
+  .preview-info .p-label {
+    font-family: var(--font-display); font-size: 0.5rem;
+    color: var(--gold); margin-bottom: 0.25rem;
+  }
+  .preview-info .p-temp {
+    font-family: var(--font-display); font-size: 1.25rem; color: var(--text);
+  }
+  .preview-info .p-advice {
+    font-size: 1.1rem; color: var(--text); opacity: 0.8; margin-top: 0.25rem;
+  }
+  .preview-info .p-sensory {
+    font-size: 0.85rem; color: var(--gold-dim); margin-top: 0.5rem;
+    padding-top: 0.4rem; border-top: 1px solid rgba(255,210,80,0.15);
+  }
+
+  /* Sensory visual states — colors always the same, only effects differ */
+  .full-preview.calm .rain-overlay, .full-preview.calm .snow-overlay { opacity: 0 !important; }
+  .full-preview.still .rain-overlay, .full-preview.still .snow-overlay { opacity: 0 !important; }
+</style>
+</head>
+<body>
+
+<div class="main-layout">
+
+<div class="sidebar">
+  <!-- Project Brief -->
+  <div class="brief">
+    <div class="brief-title">WEATHER OUTFIT</div>
+    <div class="brief-desc">
+      A weather app for kids who can't read temperature numbers.
+      Instead of showing "54\u00B0F", a character wears the right clothes
+      so kids instantly know what to put on.
+      Designed for tablets and smart displays (Google Nest Hub, Echo Show).
+    </div>
+    <span class="brief-tag">ASD-friendly</span>
+    <span class="brief-tag">Sensory safe</span>
+    <span class="brief-tag">Pixel art</span>
+    <span class="brief-tag">Tablet / Smart Display</span>
+  </div>
+
+  <!-- Character States -->
+  <div class="section-label">CHARACTER STATES</div>
+  <div class="states-grid" id="statesGrid"></div>
+
+  <!-- Sensory Modes -->
+  <div class="sensory-section">
+    <div class="section-label">SENSORY MODE</div>
+    <div class="sensory-modes" id="sensoryModes"></div>
+  </div>
+
+  <!-- Walk Speed -->
+  <div class="speed-section">
+    <div class="section-label">WALK SPEED</div>
+    <div class="speed-row">
+      <input type="range" id="speedSlider" min="150" max="800" value="400" step="50">
+      <span class="speed-val" id="speedVal">400ms</span>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="full-preview" id="fullPreview">
+    <div class="scanline"></div>
+    <div class="rain-overlay" id="rainOverlay"></div>
+    <div class="snow-overlay" id="snowOverlay"></div>
+    <div class="character"><img id="previewChar" src="" alt=""></div>
+    <div class="preview-info">
+      <div class="p-label" id="pLabel">--</div>
+      <div class="p-temp" id="pTemp">--</div>
+      <div class="p-advice" id="pAdvice">--</div>
+      <div class="p-sensory" id="pSensory">Mode: Standard</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+var STATES = [
+  {
+    id: 'shiba-hot', label: 'HOT',
+    temp: '68\u00B0F+ (20\u00B0C+)',
+    outfit: 'Red t-shirt + shorts + sunglasses',
+    bg: 'assets/backgrounds/bg-sunny.png',
+    frames: ['assets/characters/shiba-hot-1.png', 'assets/characters/shiba-hot-2.png'],
+    rain: false, snow: false,
+    advice: 'Light clothes are perfect!',
+  },
+  {
+    id: 'shiba-cool', label: 'COOL',
+    temp: '50-68\u00B0F (10-20\u00B0C)',
+    outfit: 'Blue long-sleeve + khaki pants',
+    bg: 'assets/backgrounds/bg-sunny.png',
+    frames: ['assets/characters/shiba-cool-1.png', 'assets/characters/shiba-cool-2.png'],
+    rain: false, snow: false,
+    advice: 'Light jacket or hoodie!',
+  },
+  {
+    id: 'bear-cold', label: 'COLD',
+    temp: 'Below 50\u00B0F (10\u00B0C)',
+    outfit: 'Puffer coat + scarf + earmuffs',
+    bg: 'assets/backgrounds/bg-snowy.png',
+    frames: ['assets/characters/bear-cold-1.png', 'assets/characters/bear-cold-2.png'],
+    rain: false, snow: true,
+    advice: 'Bundle up! It\'s freezing!',
+  },
+  {
+    id: 'duck-rainy', label: 'RAINY',
+    temp: 'Any temp + rain',
+    outfit: 'Raincoat + red boots + umbrella',
+    bg: 'assets/backgrounds/bg-rainy.png',
+    frames: ['assets/characters/duck-rainy-1.png', 'assets/characters/duck-rainy-2.png'],
+    rain: true, snow: false,
+    advice: 'Grab your raincoat!',
+  },
+];
+
+var SENSORY = [
+  { id: 'standard', icon: '\u2600\uFE0F', name: 'STANDARD', desc: 'Weather effects (rain, snow, sun rays) + walk animation' },
+  { id: 'calm',     icon: '\uD83C\uDF19', name: 'CALM',     desc: 'No weather effects, walk animation only' },
+  { id: 'still',    icon: '\u23F8\uFE0F',  name: 'STILL',    desc: 'No effects, no animation, static image' },
+];
+
+// DOM refs
+var rainOverlay = document.getElementById('rainOverlay');
+var snowOverlay = document.getElementById('snowOverlay');
+var previewChar = document.getElementById('previewChar');
+var fullPreview = document.getElementById('fullPreview');
+var grid = document.getElementById('statesGrid');
+var sensoryContainer = document.getElementById('sensoryModes');
+
+// Build rain particles
+for (var i = 0; i < 40; i++) {
+  var d = document.createElement('div');
+  d.className = 'raindrop';
+  Object.assign(d.style, { left: Math.random()*100+'%', height: (8+Math.random()*12)+'px',
+    animationDuration: (0.4+Math.random()*0.4)+'s', animationDelay: Math.random()+'s' });
+  rainOverlay.appendChild(d);
+}
+// Build snow particles
+for (var i = 0; i < 25; i++) {
+  var f = document.createElement('div');
+  f.className = 'snowflake'; f.textContent = '\u2744';
+  Object.assign(f.style, { left: Math.random()*100+'%', fontSize: (0.5+Math.random()*0.7)+'rem',
+    animationDuration: (3+Math.random()*4)+'s', animationDelay: Math.random()*3+'s' });
+  snowOverlay.appendChild(f);
+}
+
+// State
+var animTimers = {};
+var previewTimer = null;
+var animSpeed = 400;
+var activeState = null;
+var activeSensory = 'standard';
+
+// === Build character cards ===
+function buildCard(state) {
+  var card = document.createElement('div');
+  card.className = 'state-card';
+  card.dataset.id = state.id;
+
+  var preview = document.createElement('div');
+  preview.className = 'char-preview';
+  var img = document.createElement('img');
+  img.id = 'card-' + state.id;
+  img.src = state.frames[0];
+  img.alt = state.label;
+  preview.appendChild(img);
+
+  var info = document.createElement('div');
+  info.className = 'card-info';
+
+  var label = document.createElement('div');
+  label.className = 'state-label';
+  label.textContent = state.label;
+
+  var temp = document.createElement('div');
+  temp.className = 'state-temp';
+  temp.textContent = state.temp;
+
+  var outfit = document.createElement('div');
+  outfit.className = 'state-outfit';
+  outfit.textContent = state.outfit;
+
+  info.appendChild(label);
+  info.appendChild(temp);
+  info.appendChild(outfit);
+  card.appendChild(preview);
+  card.appendChild(info);
+
+  var frame = 0;
+  animTimers[state.id] = setInterval(function() {
+    frame = (frame + 1) % state.frames.length;
+    img.src = state.frames[frame];
+  }, animSpeed);
+
+  card.addEventListener('click', function() { selectState(state); });
+  return card;
+}
+
+STATES.forEach(function(state) {
+  grid.appendChild(buildCard(state));
+});
+
+// === Build sensory buttons ===
+function buildSensoryBtn(mode) {
+  var btn = document.createElement('button');
+  btn.className = 'sensory-btn';
+  btn.dataset.id = mode.id;
+
+  var icon = document.createElement('span');
+  icon.className = 'sensory-icon';
+  icon.textContent = mode.icon;
+
+  var text = document.createElement('div');
+  var name = document.createElement('div');
+  name.className = 'sensory-name';
+  name.textContent = mode.name;
+  var desc = document.createElement('div');
+  desc.className = 'sensory-desc';
+  desc.textContent = mode.desc;
+  text.appendChild(name);
+  text.appendChild(desc);
+
+  btn.appendChild(icon);
+  btn.appendChild(text);
+
+  btn.addEventListener('click', function() { selectSensory(mode.id); });
+  return btn;
+}
+
+SENSORY.forEach(function(mode) {
+  sensoryContainer.appendChild(buildSensoryBtn(mode));
+});
+
+// === Select character state ===
+function selectState(state) {
+  activeState = state;
+
+  document.querySelectorAll('.state-card').forEach(function(c) {
+    c.classList.toggle('active', c.dataset.id === state.id);
+  });
+
+  fullPreview.style.backgroundImage = 'url(\'' + state.bg + '\')';
+
+  // Particles depend on sensory mode
+  applySensoryToPreview();
+
+  document.getElementById('pLabel').textContent = state.label;
+  document.getElementById('pTemp').textContent = state.temp;
+  document.getElementById('pAdvice').textContent = state.advice;
+
+  // Restart preview walk animation
+  if (previewTimer) clearInterval(previewTimer);
+  if (activeSensory === 'still') {
+    // Still: static, no animation
+    previewChar.src = state.frames[0];
+  } else {
+    // Standard & Calm: same walk animation
+    var frame = 0;
+    previewChar.src = state.frames[0];
+    previewTimer = setInterval(function() {
+      frame = (frame + 1) % state.frames.length;
+      previewChar.src = state.frames[frame];
+    }, animSpeed);
+  }
+}
+
+// === Select sensory mode ===
+function selectSensory(modeId) {
+  activeSensory = modeId;
+
+  document.querySelectorAll('.sensory-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.id === modeId);
+  });
+
+  // Update label
+  var modeLabel = modeId.charAt(0).toUpperCase() + modeId.slice(1);
+  document.getElementById('pSensory').textContent = 'Mode: ' + modeLabel;
+
+  applySensoryToPreview();
+
+  // Re-select current state to update animation
+  if (activeState) selectState(activeState);
+
+  // Update card animations based on mode
+  STATES.forEach(function(state) {
+    clearInterval(animTimers[state.id]);
+    var cardImg = document.getElementById('card-' + state.id);
+    if (activeSensory === 'still') {
+      cardImg.src = state.frames[0];
+    } else {
+      var frame = 0;
+      animTimers[state.id] = setInterval(function() {
+        frame = (frame + 1) % state.frames.length;
+        cardImg.src = state.frames[frame];
+      }, animSpeed);
+    }
+  });
+}
+
+function applySensoryToPreview() {
+  if (!activeState) return;
+
+  fullPreview.classList.remove('calm', 'still');
+  if (activeSensory === 'calm') fullPreview.classList.add('calm');
+  if (activeSensory === 'still') fullPreview.classList.add('still');
+
+  // Standard: animated particles (rain/snow)
+  // Calm: no effects at all, just background + character walking
+  // Still: no effects, no animation
+  if (activeSensory === 'standard') {
+    rainOverlay.classList.toggle('show', activeState.rain);
+    snowOverlay.classList.toggle('show', activeState.snow);
+  } else {
+    rainOverlay.classList.remove('show');
+    snowOverlay.classList.remove('show');
+  }
+}
+
+// === Speed control ===
+var speedSlider = document.getElementById('speedSlider');
+var speedVal = document.getElementById('speedVal');
+speedSlider.addEventListener('input', function() {
+  animSpeed = parseInt(speedSlider.value);
+  speedVal.textContent = animSpeed + 'ms';
+
+  // Restart all
+  STATES.forEach(function(state) {
+    clearInterval(animTimers[state.id]);
+    var cardImg = document.getElementById('card-' + state.id);
+    if (activeSensory === 'still') {
+      cardImg.src = state.frames[0];
+    } else {
+      var frame = 0;
+      animTimers[state.id] = setInterval(function() {
+        frame = (frame + 1) % state.frames.length;
+        cardImg.src = state.frames[frame];
+      }, animSpeed);
+    }
+  });
+
+  if (activeState) selectState(activeState);
+});
+
+// === Init ===
+selectSensory('standard');
+selectState(STATES[0]);
+</script>
+
+</body>
+</html>

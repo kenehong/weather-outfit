@@ -205,20 +205,26 @@ const OUTFIT_MAP = [
   { max: 999, advice: "Stay cool! Drink water! 🥵" },
 ];
 
-const SCENES = {
-  clear: { bg: 'assets/backgrounds/bg-sunny.png', chars: ['assets/characters/sunny-shiba-1.png','assets/characters/sunny-shiba-2.png','assets/characters/sunny-shiba-3.png'], rain: false, snow: false },
-  rain:  { bg: 'assets/backgrounds/bg-rainy.png',  chars: ['assets/characters/rainy-duck-1.png','assets/characters/rainy-duck-2.png','assets/characters/rainy-duck-3.png'], rain: true, snow: false },
-  snow:  { bg: 'assets/backgrounds/bg-snowy.png',  chars: ['assets/characters/snowy-bear-1.png','assets/characters/snowy-bear-2.png','assets/characters/snowy-bear-3.png'], rain: false, snow: true },
+// Character outfits: 4 characters × 2 walk frames
+const CHARACTERS = {
+  'shiba-hot':   ['assets/characters/shiba-hot-1.png',  'assets/characters/shiba-hot-2.png'],
+  'shiba-cool':  ['assets/characters/shiba-cool-1.png', 'assets/characters/shiba-cool-2.png'],
+  'bear-cold':   ['assets/characters/bear-cold-1.png',  'assets/characters/bear-cold-2.png'],
+  'duck-rainy':  ['assets/characters/duck-rainy-1.png', 'assets/characters/duck-rainy-2.png'],
 };
 
-function wmoCondition(code) {
-  if (code <= 3) return 'clear';
-  if (code <= 48) return 'clear';
-  if (code <= 67) return 'rain';
-  if (code <= 77) return 'snow';
-  if (code <= 82) return 'rain';
-  if (code <= 86) return 'snow';
-  return 'rain';
+function getOutfit(tempF, weatherCode) {
+  const isRain = (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82) || weatherCode >= 95;
+  const isSnow = (weatherCode >= 71 && weatherCode <= 77) || (weatherCode >= 85 && weatherCode <= 86);
+
+  // Rain → duck with raincoat
+  if (isRain) return { character: 'duck-rainy', bg: 'assets/backgrounds/bg-rainy.png', rain: true, snow: false };
+  // Freezing/Cold < 50°F (10°C) → bear with heavy coat
+  if (isSnow || tempF < 50) return { character: 'bear-cold', bg: 'assets/backgrounds/bg-snowy.png', rain: false, snow: true };
+  // Cool 50-68°F (10-20°C) → shiba with long sleeve
+  if (tempF < 68) return { character: 'shiba-cool', bg: 'assets/backgrounds/bg-sunny.png', rain: false, snow: false };
+  // Hot 68°F+ (20°C+) → shiba with t-shirt
+  return { character: 'shiba-hot', bg: 'assets/backgrounds/bg-sunny.png', rain: false, snow: false };
 }
 
 function wmoText(code) {
@@ -278,7 +284,7 @@ for (let i = 0; i < 30; i++) {
 let animId = null, animFrame = 0, curChars = [];
 function startAnim(chars) {
   stopAnim(); curChars = chars; animFrame = 0; charImg.src = chars[0];
-  animId = setInterval(() => { animFrame = (animFrame+1)%chars.length; charImg.src = chars[animFrame]; }, 700);
+  animId = setInterval(() => { animFrame = (animFrame+1)%chars.length; charImg.src = chars[animFrame]; }, 400);
 }
 function stopAnim() { if (animId) { clearInterval(animId); animId = null; } }
 
@@ -287,13 +293,12 @@ function renderWeather(data, city) {
   const cur = data.current;
   const tempF = cToF(cur.temperature_2m);
   const code = cur.weather_code;
-  const cond = wmoCondition(code);
-  const sc = SCENES[cond];
+  const outfit = getOutfit(tempF, code);
 
-  scene.style.backgroundImage = "url('" + sc.bg + "')";
-  startAnim(sc.chars);
-  rainOverlay.classList.toggle('show', sc.rain);
-  snowOverlay.classList.toggle('show', sc.snow);
+  scene.style.backgroundImage = "url('" + outfit.bg + "')";
+  startAnim(CHARACTERS[outfit.character]);
+  rainOverlay.classList.toggle('show', outfit.rain);
+  snowOverlay.classList.toggle('show', outfit.snow);
 
   weatherLabel.textContent = wmoEmoji(code) + ' ' + wmoText(code);
   tempDisplay.textContent = tempF + '\u00B0F';
@@ -353,8 +358,8 @@ async function loadWeather(lat, lon, city) {
     loadingText.textContent = 'TAP SEARCH TO START';
     infoPanel.style.display = 'flex';
     locationText.textContent = 'SEARCH A CITY';
-    scene.style.backgroundImage = "url('" + SCENES.clear.bg + "')";
-    startAnim(SCENES.clear.chars);
+    scene.style.backgroundImage = "url('assets/backgrounds/bg-sunny.png')";
+    startAnim(CHARACTERS['shiba-hot']);
   }
 }
 
@@ -471,8 +476,8 @@ function showToast(msg) {
 $('menuBtn').addEventListener('click', () => showToast('Settings coming soon'));
 
 // ===== Init =====
-scene.style.backgroundImage = "url('" + SCENES.clear.bg + "')";
-charImg.src = SCENES.clear.chars[0];
+scene.style.backgroundImage = "url('assets/backgrounds/bg-sunny.png')";
+charImg.src = CHARACTERS['shiba-hot'][0];
 initLocation();
 </script>
 
