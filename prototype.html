@@ -147,15 +147,32 @@
   .full-preview .character img {
     width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated;
   }
-  .full-preview .rain-overlay, .full-preview .snow-overlay {
+  .full-preview .rain-overlay, .full-preview .snow-overlay,
+  .full-preview .sun-overlay, .full-preview .wind-overlay {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.5s;
   }
-  .full-preview .rain-overlay.show, .full-preview .snow-overlay.show { opacity: 1; }
+  .full-preview .rain-overlay.show, .full-preview .snow-overlay.show,
+  .full-preview .sun-overlay.show, .full-preview .wind-overlay.show { opacity: 1; }
   .raindrop { position: absolute; width: 2px; background: rgba(200,220,255,0.5); animation: fall linear infinite; }
   @keyframes fall { 0% { transform: translateY(-20px); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh); opacity: 0.2; } }
   .snowflake { position: absolute; color: rgba(255,255,255,0.7); font-size: 0.8rem; animation: snowfall linear infinite; }
   @keyframes snowfall { 0% { transform: translateY(-10px) rotate(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0.3; } }
+
+  /* Sun rays — CSS gradient overlay from top-right */
+  .sun-overlay {
+    background: radial-gradient(ellipse at 90% 5%, rgba(255,220,80,0.25) 0%, rgba(255,200,50,0.1) 30%, transparent 65%);
+  }
+  .sun-overlay.show { animation: sunPulse 4s ease-in-out infinite; }
+  @keyframes sunPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* Wind/leaf particles */
+  .leaf { position: absolute; font-size: 0.7rem; animation: leafDrift linear infinite; }
+  @keyframes leafDrift {
+    0% { transform: translate(0, -10px) rotate(0); opacity: 0; }
+    5% { opacity: 0.8; }
+    100% { transform: translate(calc(100vw + 40px), 60vh) rotate(540deg); opacity: 0; }
+  }
 
 
   .preview-info {
@@ -180,8 +197,10 @@
   }
 
   /* Sensory visual states — colors always the same, only effects differ */
-  .full-preview.calm .rain-overlay, .full-preview.calm .snow-overlay { opacity: 0 !important; }
-  .full-preview.still .rain-overlay, .full-preview.still .snow-overlay { opacity: 0 !important; }
+  .full-preview.calm .rain-overlay, .full-preview.calm .snow-overlay,
+  .full-preview.calm .sun-overlay, .full-preview.calm .wind-overlay { opacity: 0 !important; }
+  .full-preview.still .rain-overlay, .full-preview.still .snow-overlay,
+  .full-preview.still .sun-overlay, .full-preview.still .wind-overlay { opacity: 0 !important; }
 </style>
 </head>
 <body>
@@ -229,6 +248,8 @@
     <div class="scanline"></div>
     <div class="rain-overlay" id="rainOverlay"></div>
     <div class="snow-overlay" id="snowOverlay"></div>
+    <div class="sun-overlay" id="sunOverlay"></div>
+    <div class="wind-overlay" id="windOverlay"></div>
     <div class="character"><img id="previewChar" src="" alt=""></div>
     <div class="preview-info">
       <div class="p-label" id="pLabel">--</div>
@@ -249,7 +270,7 @@ var STATES = [
     outfit: 'Red t-shirt + shorts + sunglasses',
     bg: 'assets/backgrounds/bg-sunny.png',
     frames: ['assets/characters/shiba-hot-1.png', 'assets/characters/shiba-hot-2.png'],
-    rain: false, snow: false,
+    rain: false, snow: false, sun: true, wind: false,
     advice: 'Light clothes are perfect!',
   },
   {
@@ -258,7 +279,7 @@ var STATES = [
     outfit: 'Blue long-sleeve + khaki pants',
     bg: 'assets/backgrounds/bg-sunny.png',
     frames: ['assets/characters/shiba-cool-1.png', 'assets/characters/shiba-cool-2.png'],
-    rain: false, snow: false,
+    rain: false, snow: false, sun: true, wind: true,
     advice: 'Light jacket or hoodie!',
   },
   {
@@ -267,7 +288,7 @@ var STATES = [
     outfit: 'Puffer coat + scarf + earmuffs',
     bg: 'assets/backgrounds/bg-snowy.png',
     frames: ['assets/characters/bear-cold-1.png', 'assets/characters/bear-cold-2.png'],
-    rain: false, snow: true,
+    rain: false, snow: true, sun: false, wind: false,
     advice: 'Bundle up! It\'s freezing!',
   },
   {
@@ -276,7 +297,7 @@ var STATES = [
     outfit: 'Raincoat + red boots + umbrella',
     bg: 'assets/backgrounds/bg-rainy.png',
     frames: ['assets/characters/duck-rainy-1.png', 'assets/characters/duck-rainy-2.png'],
-    rain: true, snow: false,
+    rain: true, snow: false, sun: false, wind: false,
     advice: 'Grab your raincoat!',
   },
 ];
@@ -290,6 +311,8 @@ var SENSORY = [
 // DOM refs
 var rainOverlay = document.getElementById('rainOverlay');
 var snowOverlay = document.getElementById('snowOverlay');
+var sunOverlay = document.getElementById('sunOverlay');
+var windOverlay = document.getElementById('windOverlay');
 var previewChar = document.getElementById('previewChar');
 var fullPreview = document.getElementById('fullPreview');
 var grid = document.getElementById('statesGrid');
@@ -310,6 +333,15 @@ for (var i = 0; i < 25; i++) {
   Object.assign(f.style, { left: Math.random()*100+'%', fontSize: (0.5+Math.random()*0.7)+'rem',
     animationDuration: (3+Math.random()*4)+'s', animationDelay: Math.random()*3+'s' });
   snowOverlay.appendChild(f);
+}
+// Build wind/leaf particles
+for (var i = 0; i < 15; i++) {
+  var lf = document.createElement('div');
+  lf.className = 'leaf'; lf.textContent = '\uD83C\uDF43';
+  Object.assign(lf.style, { left: (-10 - Math.random()*20)+'%', top: (Math.random()*60)+'%',
+    fontSize: (0.5+Math.random()*0.5)+'rem',
+    animationDuration: (5+Math.random()*6)+'s', animationDelay: Math.random()*8+'s' });
+  windOverlay.appendChild(lf);
 }
 
 // State
@@ -472,15 +504,19 @@ function applySensoryToPreview() {
   if (activeSensory === 'calm') fullPreview.classList.add('calm');
   if (activeSensory === 'still') fullPreview.classList.add('still');
 
-  // Standard: animated particles (rain/snow)
+  // Standard: animated particles (rain/snow/sun/wind)
   // Calm: no effects at all, just background + character walking
   // Still: no effects, no animation
   if (activeSensory === 'standard') {
     rainOverlay.classList.toggle('show', activeState.rain);
     snowOverlay.classList.toggle('show', activeState.snow);
+    sunOverlay.classList.toggle('show', activeState.sun);
+    windOverlay.classList.toggle('show', activeState.wind);
   } else {
     rainOverlay.classList.remove('show');
     snowOverlay.classList.remove('show');
+    sunOverlay.classList.remove('show');
+    windOverlay.classList.remove('show');
   }
 }
 
