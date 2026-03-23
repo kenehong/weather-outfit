@@ -252,9 +252,8 @@
     <div class="preview-info">
       <div class="p-label" id="pLabel">--</div>
       <div class="p-temp" id="pTemp">--</div>
-      <div class="p-location" id="locationText"></div>
       <div class="p-advice" id="pAdvice">--</div>
-      <div class="p-sensory" id="pSensory">Mode: Standard</div>
+      <div class="p-location" id="locationText"></div>
     </div>
   </div>
 </div>
@@ -470,9 +469,7 @@ function selectSensory(modeId) {
     b.classList.toggle('active', b.dataset.id === modeId);
   });
 
-  // Update label
-  var modeLabel = modeId.charAt(0).toUpperCase() + modeId.slice(1);
-  document.getElementById('pSensory').textContent = 'Mode: ' + modeLabel;
+  // Update label (removed — mode info no longer shown in preview)
 
   applySensoryToPreview();
 
