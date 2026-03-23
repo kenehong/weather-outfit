@@ -15,20 +15,39 @@ function pickState(tempF, condition) {
   return 'shiba-hot';
 }
 
+function extractPlace(address) {
+  return address.town ||
+    address.village ||
+    address.hamlet ||
+    address.city ||
+    address.suburb ||
+    '';
+}
+
 async function initLiveWeather() {
   // Show default state immediately as fallback
   selectState(STATES[0]);
 
+  var lat = DEFAULT_LOCATION.lat;
+  var lon = DEFAULT_LOCATION.lon;
+
   try {
-    const result = await getWeatherAndLocation();
-    const data = result.weatherData;
+    var position = await getCurrentPosition();
+    lat = position.coords.latitude;
+    lon = position.coords.longitude;
+  } catch (err) {
+    console.warn('Geolocation failed, using default location.');
+  }
 
-    const tempF = data.current.temperature_2m;
-    const code = data.current.weather_code;
-    const condition = weatherCodeToCondition(code);
-    const stateId = pickState(tempF, condition);
+  // Fetch weather
+  try {
+    var weatherData = await fetchWeather(lat, lon);
+    var tempF = weatherData.current.temperature_2m;
+    var code = weatherData.current.weather_code;
+    var condition = weatherCodeToCondition(code);
+    var stateId = pickState(tempF, condition);
 
-    const matched = STATES.find(function(s) {
+    var matched = STATES.find(function(s) {
       return s.id === stateId;
     });
 
@@ -36,20 +55,20 @@ async function initLiveWeather() {
       selectState(matched);
       document.getElementById('pTemp').textContent = Math.round(tempF) + '°F';
     }
-
-    var locationEl = document.getElementById('locationText');
-    if (locationEl) {
-      var address = result.locationData.address || {};
-      var place =
-        address.town ||
-        address.village ||
-        address.hamlet ||
-        address.city ||
-        address.suburb ||
-        '';
-      locationEl.textContent = place;
-    }
   } catch (err) {
-    console.error('initLiveWeather error:', err);
+    console.error('Weather fetch error:', err);
+  }
+
+  // Fetch location name separately
+  var locationEl = document.getElementById('locationText');
+  if (locationEl) {
+    try {
+      var locationData = await fetchLocationName(lat, lon);
+      var address = locationData.address || {};
+      var place = extractPlace(address);
+      if (place) locationEl.textContent = place;
+    } catch (err) {
+      console.warn('Location name fetch failed:', err);
+    }
   }
 }
