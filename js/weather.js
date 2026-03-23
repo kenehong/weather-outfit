@@ -20,24 +20,6 @@ async function fetchWeather(lat, lon) {
 
 async function fetchLocationName(lat, lon) {
   const url =
-    `https://geocoding-api.open-meteo.com/v1/reverse` +
-    `?latitude=${lat}&longitude=${lon}&language=en&format=json`;
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error('Failed to fetch location name');
-  }
-  return await res.json();
-}
-
-function getCurrentPosition() {
-  return new Promise(function(resolve, reject) {
-    navigator.geolocation.getCurrentPosition(resolve, reject);
-  });
-}
-
-async function fetchLocationName(lat, lon) {
-  const url =
     `https://nominatim.openstreetmap.org/reverse` +
     `?lat=${lat}&lon=${lon}&format=jsonv2&addressdetails=1`;
 

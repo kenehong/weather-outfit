@@ -16,6 +16,9 @@ function pickState(tempF, condition) {
 }
 
 async function initLiveWeather() {
+  // Show default state immediately as fallback
+  selectState(STATES[0]);
+
   try {
     const result = await getWeatherAndLocation();
     const data = result.weatherData;
@@ -34,17 +37,18 @@ async function initLiveWeather() {
       document.getElementById('pTemp').textContent = Math.round(tempF) + '°F';
     }
 
-    const address = result.locationData.address || {};
-    const place =
-      address.city ||
-      address.town ||
-      address.village ||
-      address.hamlet ||
-      address.suburb ||
-      '';
-
-    document.getElementById('locationText').textContent = place;
-    console.log(result.locationData);
+    var locationEl = document.getElementById('locationText');
+    if (locationEl) {
+      var address = result.locationData.address || {};
+      var place =
+        address.city ||
+        address.town ||
+        address.village ||
+        address.hamlet ||
+        address.suburb ||
+        '';
+      locationEl.textContent = place;
+    }
   } catch (err) {
     console.error('initLiveWeather error:', err);
   }
