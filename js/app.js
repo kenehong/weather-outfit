@@ -41,10 +41,10 @@ async function initLiveWeather() {
     if (locationEl) {
       var address = result.locationData.address || {};
       var place =
-        address.city ||
         address.town ||
         address.village ||
         address.hamlet ||
+        address.city ||
         address.suburb ||
         '';
       locationEl.textContent = place;
