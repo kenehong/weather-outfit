@@ -52,6 +52,7 @@ async function initLiveWeather() {
     });
 
     if (matched) {
+      if (typeof TTS !== 'undefined') TTS.reset();
       selectState(matched);
       document.getElementById('pTemp').textContent = Math.round(tempF) + '°F';
     }

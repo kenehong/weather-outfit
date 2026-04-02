@@ -143,6 +143,11 @@
   .sensory-desc { font-size: 0.8rem; color: var(--text-dim); }
 
   /* Speed control in sidebar */
+  .sound-section {
+    padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+  .sound-section .sensory-btn.muted { opacity: 0.5; }
+
   .speed-section {
     padding-top: 0.5rem; border-top: 1px solid var(--border);
   }
@@ -261,6 +266,18 @@
   <div class="sensory-section">
     <div class="section-label">SENSORY MODE</div>
     <div class="sensory-modes" id="sensoryModes"></div>
+  </div>
+
+  <!-- Sound Toggle -->
+  <div class="sound-section">
+    <div class="section-label">VOICE</div>
+    <button class="sensory-btn" id="ttsToggle" onclick="toggleTTS()">
+      <span class="sensory-icon" id="ttsIcon">🔊</span>
+      <div>
+        <div class="sensory-name" id="ttsLabel">SOUND ON</div>
+        <div class="sensory-desc">Reads outfit advice aloud</div>
+      </div>
+    </button>
   </div>
 
   <!-- Walk Speed -->
@@ -476,6 +493,9 @@ function selectState(state) {
   document.getElementById('pTemp').textContent = state.temp;
   document.getElementById('pAdvice').textContent = state.advice;
 
+  // Speak the advice
+  if (typeof TTS !== 'undefined') TTS.speak(state, activeSensory);
+
   // Restart preview walk animation
   if (previewTimer) clearInterval(previewTimer);
   if (activeSensory === 'still') {
@@ -503,6 +523,9 @@ function selectSensory(modeId) {
   // Update label (removed — mode info no longer shown in preview)
 
   applySensoryToPreview();
+
+  // Reset TTS so mode change triggers new speech
+  if (typeof TTS !== 'undefined') TTS.reset();
 
   // Re-select current state to update animation
   if (activeState) selectState(activeState);
@@ -571,6 +594,27 @@ speedSlider.addEventListener('input', function() {
 // === Init ===
 selectSensory('standard');
 
+// === TTS toggle ===
+function toggleTTS() {
+  var on = TTS.toggle();
+  document.getElementById('ttsIcon').textContent = on ? '🔊' : '🔇';
+  document.getElementById('ttsLabel').textContent = on ? 'SOUND ON' : 'SOUND OFF';
+  document.getElementById('ttsToggle').classList.toggle('muted', !on);
+  // If turning on, speak the current state
+  if (on && activeState) {
+    TTS.reset();
+    TTS.speak(activeState, activeSensory);
+  }
+}
+// Init TTS button state
+(function() {
+  if (typeof TTS !== 'undefined' && !TTS.isEnabled()) {
+    document.getElementById('ttsIcon').textContent = '🔇';
+    document.getElementById('ttsLabel').textContent = 'SOUND OFF';
+    document.getElementById('ttsToggle').classList.add('muted');
+  }
+})();
+
 // === Menu toggle ===
 function toggleMenu() {
   var sidebar = document.getElementById('sidebar');
@@ -584,6 +628,7 @@ function toggleMenu() {
 }
 </script>
 
+<script src="js/tts.js"></script>
 <script src="js/config.js"></script>
 <script src="js/weather.js"></script>
 <script src="js/app.js"></script>
