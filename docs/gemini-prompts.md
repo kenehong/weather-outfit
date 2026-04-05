@@ -1,9 +1,9 @@
-# Gemini Image Prompts — Weather Outfit App (v3)
+# Gemini Image Prompts — Weather Outfit App (v4)
 
-> 걷기 애니메이션 + 옷이 핵심!
-> 캐릭터마다 2프레임 (손발 방향 교차 걷기 루프)
-> 한 프롬프트로 2프레임을 나란히 생성 — Gemini에 한번에 요청
-> 온도별 옷차림이 한눈에 보이도록 — ASD 아이들이 뭘 입어야 하는지 캐릭터만 보면 알 수 있게
+> **v4 변경사항**: 사람 캐릭터 추가 + 걷기→날씨 테마 2프레임 전환
+> 각 날씨 상태마다 연결된 2가지 포즈 (before/after moment)
+> 동물/사람 토글 — 같은 날씨에 동물 or 사람 캐릭터 선택 가능
+> 새 COLD 상태 추가 (눈 없이 추운 날)
 
 ---
 
@@ -501,4 +501,328 @@ Session 3: Polar Bear + Owl
 # ImageMagick 사용
 convert shiba-hot-sheet.png -crop 512x512+0+0 shiba-hot-1.png
 convert shiba-hot-sheet.png -crop 512x512+512+0 shiba-hot-2.png
+```
+
+---
+---
+
+# v4 — 사람 캐릭터 + 날씨 테마 애니메이션 + COLD 상태
+
+## v4 변경 요약
+
+- **걷기 → 날씨 테마 2프레임**: 단순 걷기 대신 각 날씨와 연결된 포즈 2장
+- **사람 캐릭터 5종 추가**: 동물과 같은 옷차림, 사람 캐릭터
+- **새 동물 캐릭터**: cat-cold (눈 없이 추운 날 — 코트+비니)
+- **bear-cold → bear-snowy 리네임**: 눈 오는 날 전용
+
+## v4 스타일 가이드 (기존 캐릭터와 동일하게)
+
+기존 이미지 레퍼런스:
+- Chunky pixel art, approx 128×128 upscaled
+- Chibi/kawaii 비율 — 큰 머리, 짧은 몸통
+- **검정 배경 (#000000)**
+- 핑크 볼터치 양쪽
+- 단순한 점 눈 + 하이라이트
+- 밝고 채도 높은 옷 색상
+- 전신 (머리~발), 가운데 정렬
+- 텍스트/UI 요소 없음
+
+## v4 2프레임 애니메이션 컨셉 (Subtle 움직임)
+
+> **핵심 원칙**: 기본 포즈는 99% 동일. 작은 요소 1-2개만 변화.
+> 루프 시 자연스러운 "살아있는" 느낌을 주되, 뚝뚝 끊기지 않도록.
+
+| 상태 | Frame 1 (기본 포즈) | Frame 2 (미세 변화) |
+|------|---------------------|---------------------|
+| HOT | 선글라스 머리 위, 한 손 이마 가림 | 같은 포즈 + 손만 살짝 옆으로 이동 (부채질 느낌) |
+| COOL | 양손 주머니, 정면 | 같은 포즈 + 머리카락 끝만 오른쪽으로 살짝 날림 |
+| COLD | 팔짱 끼고 움츠림 | 같은 포즈 + 작은 입김 구름 추가 |
+| SNOWY | 올려다보기, 양손 내리고 | 같은 포즈 + 장갑 손 살짝만 올림 + 눈송이 1개 |
+| RAINY | 우산 들고 서있기, 미소 | 같은 포즈 + 발밑 작은 물방울 2-3개 추가 |
+
+---
+
+## 🐱 NEW: Cat — COLD (눈 없이 추운 날)
+
+> 새 동물 캐릭터. 기존 bear-cold(패딩+목도리+귀마개)보다 가벼운 겨울 차림.
+
+### cat-cold-1.png (Frame 1: 기본)
+
+```
+Pixel art character on solid black background.
+A cute chibi orange tabby cat standing upright on two legs, anthropomorphic.
+Wearing a forest GREEN winter coat with visible buttons down the front,
+and a bright YELLOW knitted beanie hat pulled down to the ears.
+Dark navy pants and small brown boots.
+The cat has cream-colored belly fur visible at the collar.
+Arms crossed, hugging itself, looking a bit chilly with a slight frown.
+Pink blush circles on both cheeks, simple black dot eyes with small white highlights.
+Chunky pixel art style, bright saturated colors, clean but soft edges.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+### cat-cold-2.png (Frame 2: 입김만 추가)
+
+```
+Pixel art character on solid black background.
+The EXACT SAME cute chibi orange tabby cat — same green winter coat, same yellow
+beanie, same dark pants, same brown boots, same cream belly, same arms crossed
+hugging itself, same pose and position.
+The ONLY difference: a small white breath cloud (3-4 white pixels) now visible
+near the mouth, and eyes slightly more squinted.
+Everything else — body, arms, legs, clothing — is pixel-for-pixel identical to Frame 1.
+Pink blush circles on both cheeks.
+Same chunky pixel art style, same proportions, same colors as Frame 1.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+---
+
+## 🧑 사람 캐릭터 — 5종
+
+> 모든 사람 캐릭터는 **같은 캐릭터** — 짧은 갈색 머리, 둥근 얼굴.
+> 동물 캐릭터와 **같은 옷 색상 매칭** — 한눈에 같은 날씨 상태임을 알 수 있도록.
+
+### kid-hot-1.png (HOT Frame 1: 기본)
+
+```
+Pixel art character on solid black background.
+A cute chibi pixel art young character (short brown hair,
+round face) standing upright. Wearing a bright RED short-sleeve t-shirt,
+BLUE shorts, and black SUNGLASSES pushed up on the forehead.
+One hand raised up near forehead shielding eyes from sun, cheerful smile.
+Other hand relaxed at side.
+Pink blush circles on both cheeks, simple black dot eyes with white highlights.
+Chunky pixel art style matching the reference shiba inu character — same pixel
+density, same proportions (big head, small body), same level of detail.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+### kid-hot-2.png (HOT Frame 2: 미세 변화)
+
+```
+Pixel art character on solid black background.
+The EXACT SAME cute chibi character — same red t-shirt, blue shorts,
+same short brown hair, same sunglasses on forehead, same pose.
+The ONLY differences from Frame 1:
+- The raised hand has shifted slightly to the side (subtle fanning motion)
+- Mouth slightly more open
+Everything else — body, legs, clothing position — is pixel-for-pixel identical.
+Pink blush circles on both cheeks.
+Same chunky pixel art style, same proportions, same colors as Frame 1.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+---
+
+### kid-cool-1.png (COOL Frame 1: 기본)
+
+```
+Pixel art character on solid black background.
+A cute chibi pixel art young character (same character — short brown hair, round face) standing
+upright. Wearing a BLUE zip-up hoodie jacket and KHAKI long pants, white sneakers.
+Both hands casually tucked into hoodie front pockets. Relaxed gentle smile.
+Hair resting naturally.
+Pink blush circles on both cheeks, simple black dot eyes with white highlights.
+Chunky pixel art style matching the reference characters.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+### kid-cool-2.png (COOL Frame 2: 미세 변화)
+
+```
+Pixel art character on solid black background.
+The EXACT SAME cute chibi character — same blue hoodie, khaki pants, white sneakers,
+same hands in pockets, same body position and pose.
+The ONLY difference from Frame 1:
+- The tips of the hair are shifted slightly to the right (gentle breeze)
+- Hoodie drawstrings shifted slightly right
+Everything else — body, arms, legs, face, clothing — is pixel-for-pixel identical.
+Pink blush circles on both cheeks.
+Same chunky pixel art style, same proportions, same colors as Frame 1.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+---
+
+### kid-cold-1.png (COLD Frame 1: 기본)
+
+```
+Pixel art character on solid black background.
+A cute chibi pixel art young character (same character — short brown hair peeking out from hat)
+standing upright. Wearing a forest GREEN winter coat with visible buttons,
+a bright YELLOW knitted beanie hat, dark NAVY jeans, and brown boots.
+Arms crossed hugging the body, slight shiver expression.
+Pink blush circles on both cheeks, simple black dot eyes.
+Chunky pixel art style matching the reference characters.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+### kid-cold-2.png (COLD Frame 2: 미세 변화)
+
+```
+Pixel art character on solid black background.
+The EXACT SAME cute chibi character — same green winter coat, yellow beanie, navy jeans,
+brown boots, same arms crossed hugging body, same pose and position.
+The ONLY differences from Frame 1:
+- A small white breath cloud (3-4 white pixels) appears near the mouth
+- Eyes slightly more squinted
+Everything else — body, arms, legs, clothing — is pixel-for-pixel identical.
+Pink blush circles on both cheeks.
+Same chunky pixel art style, same proportions, same colors as Frame 1.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+---
+
+### kid-snowy-1.png (SNOWY Frame 1: 기본)
+
+```
+Pixel art character on solid black background.
+A cute chibi pixel art young character (same character — short brown hair peeking from earmuffs)
+standing upright. Wearing a puffy dark NAVY blue puffer jacket (quilted, very puffy),
+a RED scarf wrapped around neck, RED earmuffs on ears, RED mittens on both hands,
+and brown winter BOOTS.
+Looking up at the sky with wonder — head tilted slightly up, mouth in an "ooh"
+shape. Both mittened hands down at sides.
+Pink blush circles on both cheeks, eyes looking upward with sparkle highlights.
+Chunky pixel art style matching the reference polar bear character.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+### kid-snowy-2.png (SNOWY Frame 2: 미세 변화)
+
+```
+Pixel art character on solid black background.
+The EXACT SAME cute chibi character — same navy puffer jacket, red scarf, red earmuffs,
+red mittens, brown boots, same head tilted up looking at sky, same pose.
+The ONLY differences from Frame 1:
+- One mittened hand raised slightly (just a few pixels higher than Frame 1)
+- A single small white snowflake pixel near the raised hand
+Everything else — body, other arm, legs, face direction — is pixel-for-pixel identical.
+Pink blush circles on both cheeks.
+Same chunky pixel art style, same proportions, same colors as Frame 1.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+---
+
+### kid-rainy-1.png (RAINY Frame 1: 기본)
+
+```
+Pixel art character on solid black background.
+A cute chibi pixel art young character (same character — short brown hair) standing upright.
+Wearing a bright YELLOW raincoat buttoned up (covering torso, buttons visible),
+and RED rain boots on both feet.
+Holding a small RED umbrella open above the head with the right hand.
+Left hand hanging at the side. Calm expression, gentle smile looking forward.
+Pink blush circles on both cheeks, simple black dot eyes.
+Chunky pixel art style matching the reference duck character.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+### kid-rainy-2.png (RAINY Frame 2: 미세 변화)
+
+```
+Pixel art character on solid black background.
+The EXACT SAME cute chibi character — same yellow raincoat, red rain boots, red umbrella
+held in right hand above head, same standing pose, same left hand at side.
+The ONLY differences from Frame 1:
+- 2-3 small blue water drop pixels appear near the feet (tiny puddle splash)
+- Smile slightly wider
+Everything else — body, arms, legs, umbrella position — is pixel-for-pixel identical.
+Pink blush circles on both cheeks.
+Same chunky pixel art style, same proportions, same colors as Frame 1.
+Full body from head to toe, centered in frame.
+No text, no ground, no shadow. Only the character on pure black background.
+```
+
+---
+
+## v4 파일 네이밍 요약
+
+### 새로 생성 필요한 이미지 (12장)
+
+```
+assets/characters/
+  cat-cold-1.png       cat-cold-2.png        ← NEW 동물 (COLD)
+  kid-hot-1.png        kid-hot-2.png         ← NEW 사람
+  kid-cool-1.png       kid-cool-2.png        ← NEW 사람
+  kid-cold-1.png       kid-cold-2.png        ← NEW 사람
+  kid-snowy-1.png      kid-snowy-2.png       ← NEW 사람
+  kid-rainy-1.png      kid-rainy-2.png       ← NEW 사람
+```
+
+### 기존 유지 (코드에서 리네임)
+
+```
+  bear-cold-1.png  → 코드에서 bear-snowy 상태로 사용 (파일명 유지)
+  shiba-hot-1/2, shiba-cool-1/2, duck-rainy-1/2 → 그대로 유지
+```
+
+### 옷 색상 매칭 (동물 ↔ 사람)
+
+| 상태 | 공통 색상 | 동물 | 사람 |
+|------|----------|------|------|
+| HOT | 빨간 상의 + 파란 하의 + 선글라스 | Shiba | Kid |
+| COOL | 파란 후드/자켓 + 카키 바지 | Shiba | Kid |
+| COLD | 초록 코트 + 노란 비니 | Cat | Kid |
+| SNOWY | 남색 패딩 + 빨간 목도리/귀마개/장갑 | Bear | Kid |
+| RAINY | 노란 레인코트 + 빨간 장화/우산 | Duck | Kid |
+
+## Gemini 워크플로우 (v4)
+
+```
+Session 1: 기존 캐릭터 스타일 레퍼런스 이미지 첨부
+  → cat-cold-1.png (개별 생성)
+  → cat-cold-2.png (개별 생성)
+
+Session 2: Kid 캐릭터 (Session 1 결과를 레퍼런스로 첨부)
+  → kid-hot-1.png, kid-hot-2.png
+  → kid-cool-1.png, kid-cool-2.png
+  → kid-cold-1.png, kid-cold-2.png
+
+Session 3: Kid 캐릭터 계속
+  → kid-snowy-1.png, kid-snowy-2.png
+  → kid-rainy-1.png, kid-rainy-2.png
+```
+
+> 각 프레임 **개별 생성** 권장 (v3의 나란히 생성보다 일관성 높음)
+> 레퍼런스 이미지를 항상 첨부하여 스타일 일관성 유지
+
+---
+
+## 🌇 NEW: 저녁 배경 (bg-evening.png)
+
+> 기존 bg-sunny.png와 같은 구도, 색감만 석양 톤으로.
+> 해가 진 후(오후 6시~) HOT/COOL/COLD 상태에서 bg-sunny 대신 사용.
+
+### bg-evening.png
+
+```
+Pixel art evening sunset landscape scene, same composition and layout as
+the reference sunny background image.
+Same rolling green hills, same dirt path, same small colorful pixel flowers
+(red, yellow, white) in the foreground, same style of fluffy clouds.
+The KEY difference is the lighting and sky color:
+- Sky transitions from warm ORANGE at the horizon to deep PURPLE-BLUE at the top
+- A large warm orange-red setting sun low on the right side (half below horizon)
+- Clouds are tinted pink and orange from the sunset
+- Hills and grass have a warm golden-amber tint instead of bright green
+- Flowers and ground have soft warm shadows
+- Overall warm, cozy golden-hour palette — orange, amber, pink, soft purple
+Same chunky pixel art style as the reference background.
+Peaceful and cozy, not dark or scary. Still clearly visible.
+No characters. No text. Same dimensions as reference image.
 ```

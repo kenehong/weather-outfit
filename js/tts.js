@@ -7,10 +7,11 @@ var TTS = (function() {
   var speakTimeout = null;
 
   var prefixes = {
-    'shiba-hot': "It's hot today!",
-    'shiba-cool': "It's a bit cool!",
-    'bear-cold': "Brrr, it's cold!",
-    'duck-rainy': "It's raining!",
+    'hot': "It's hot today!",
+    'cool': "It's a bit cool!",
+    'cold': "Brrr, it's chilly!",
+    'snowy': "Brrr, it's freezing!",
+    'rainy': "It's raining!",
   };
 
   function speak(state, sensoryMode) {

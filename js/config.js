@@ -4,6 +4,7 @@ const DEFAULT_LOCATION = {
 };
 
 const TEMP_THRESHOLDS = {
+  snowyMax: 32,
   coldMax: 50,
   coolMax: 68
 };

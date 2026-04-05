@@ -9,10 +9,12 @@ function weatherCodeToCondition(code) {
 }
 
 function pickState(tempF, condition) {
-  if (condition === 'rain') return 'duck-rainy';
-  if (tempF < TEMP_THRESHOLDS.coldMax) return 'bear-cold';
-  if (tempF < TEMP_THRESHOLDS.coolMax) return 'shiba-cool';
-  return 'shiba-hot';
+  if (condition === 'rain' || condition === 'storm') return 'rainy';
+  if (condition === 'snow') return 'snowy';
+  if (tempF < TEMP_THRESHOLDS.snowyMax) return 'snowy';
+  if (tempF < TEMP_THRESHOLDS.coldMax) return 'cold';
+  if (tempF < TEMP_THRESHOLDS.coolMax) return 'cool';
+  return 'hot';
 }
 
 function extractPlace(address) {

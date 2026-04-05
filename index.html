@@ -81,6 +81,24 @@
     color: var(--gold-dim);
   }
 
+  /* Character type toggle */
+  .char-type-section { padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .char-type-toggle {
+    display: flex; gap: 0.35rem; margin-top: 0.35rem;
+  }
+  .type-btn {
+    flex: 1; padding: 0.4rem 0.5rem; cursor: pointer;
+    border: 2px solid rgba(255,210,80,0.15);
+    background: transparent; color: var(--text-dim);
+    font-family: var(--font-display); font-size: 0.3rem;
+    letter-spacing: 0.05em; transition: all 0.2s;
+  }
+  .type-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+  .type-btn.active {
+    border-color: var(--border-active); background: rgba(255,210,80,0.06);
+    color: var(--gold);
+  }
+
   /* Section label */
   .section-label {
     font-family: var(--font-display); font-size: 0.35rem;
@@ -258,6 +276,15 @@
     <span class="brief-tag">Tablet / Smart Display</span>
   </div>
 
+  <!-- Character Type Toggle -->
+  <div class="char-type-section">
+    <div class="section-label">CHARACTER</div>
+    <div class="char-type-toggle">
+      <button class="type-btn active" data-type="animal" onclick="switchCharType('animal')">ANIMAL</button>
+      <button class="type-btn" data-type="human" onclick="switchCharType('human')">HUMAN</button>
+    </div>
+  </div>
+
   <!-- Character States -->
   <div class="section-label">CHARACTER STATES</div>
   <div class="states-grid" id="statesGrid"></div>
@@ -284,8 +311,8 @@
   <div class="speed-section">
     <div class="section-label">WALK SPEED</div>
     <div class="speed-row">
-      <input type="range" id="speedSlider" min="150" max="800" value="400" step="50">
-      <span class="speed-val" id="speedVal">400ms</span>
+      <input type="range" id="speedSlider" min="150" max="800" value="600" step="50">
+      <span class="speed-val" id="speedVal">600ms</span>
     </div>
   </div>
 </div>
@@ -311,38 +338,62 @@
 <script>
 var STATES = [
   {
-    id: 'shiba-hot', label: 'HOT',
+    id: 'hot', label: 'HOT',
     temp: '68\u00B0F+ (20\u00B0C+)',
-    outfit: 'Red t-shirt + shorts + sunglasses',
+    outfit: 'T-shirt + shorts + sunglasses',
     bg: 'assets/backgrounds/bg-sunny.png',
-    frames: ['assets/characters/shiba-hot-1.png', 'assets/characters/shiba-hot-2.png'],
+    frames: {
+      animal: ['assets/characters/shiba-hot-1.png', 'assets/characters/shiba-hot-2.png'],
+      human: ['assets/characters/kid-hot-1.png', 'assets/characters/kid-hot-2.png'],
+    },
     rain: false, snow: false, wind: false,
     advice: 'Light clothes are perfect!',
   },
   {
-    id: 'shiba-cool', label: 'COOL',
+    id: 'cool', label: 'COOL',
     temp: '50-68\u00B0F (10-20\u00B0C)',
-    outfit: 'Blue long-sleeve + khaki pants',
+    outfit: 'Hoodie + long pants',
     bg: 'assets/backgrounds/bg-sunny.png',
-    frames: ['assets/characters/shiba-cool-1.png', 'assets/characters/shiba-cool-2.png'],
+    frames: {
+      animal: ['assets/characters/shiba-cool-1.png', 'assets/characters/shiba-cool-2.png'],
+      human: ['assets/characters/kid-cool-1.png', 'assets/characters/kid-cool-2.png'],
+    },
     rain: false, snow: false, wind: true,
     advice: 'Light jacket or hoodie!',
   },
   {
-    id: 'bear-cold', label: 'COLD',
-    temp: 'Below 50\u00B0F (10\u00B0C)',
+    id: 'cold', label: 'COLD',
+    temp: '32-50\u00B0F (0-10\u00B0C)',
+    outfit: 'Winter coat + beanie',
+    bg: 'assets/backgrounds/bg-sunny.png',
+    frames: {
+      animal: ['assets/characters/cat-cold-1.png', 'assets/characters/cat-cold-2.png'],
+      human: ['assets/characters/kid-cold-1.png', 'assets/characters/kid-cold-2.png'],
+    },
+    rain: false, snow: false, wind: true,
+    advice: 'Wear a warm coat!',
+  },
+  {
+    id: 'snowy', label: 'SNOWY',
+    temp: 'Below 32\u00B0F (0\u00B0C)',
     outfit: 'Puffer coat + scarf + earmuffs',
     bg: 'assets/backgrounds/bg-snowy.png',
-    frames: ['assets/characters/bear-cold-1.png', 'assets/characters/bear-cold-2.png'],
+    frames: {
+      animal: ['assets/characters/bear-cold-1.png', 'assets/characters/bear-cold-2.png'],
+      human: ['assets/characters/kid-snowy-1.png', 'assets/characters/kid-snowy-2.png'],
+    },
     rain: false, snow: true, wind: false,
     advice: 'Bundle up! It\'s freezing!',
   },
   {
-    id: 'duck-rainy', label: 'RAINY',
+    id: 'rainy', label: 'RAINY',
     temp: 'Any temp + rain',
-    outfit: 'Raincoat + red boots + umbrella',
+    outfit: 'Raincoat + boots + umbrella',
     bg: 'assets/backgrounds/bg-rainy.png',
-    frames: ['assets/characters/duck-rainy-1.png', 'assets/characters/duck-rainy-2.png'],
+    frames: {
+      animal: ['assets/characters/duck-rainy-1.png', 'assets/characters/duck-rainy-2.png'],
+      human: ['assets/characters/kid-rainy-1.png', 'assets/characters/kid-rainy-2.png'],
+    },
     rain: true, snow: false, wind: false,
     advice: 'Grab your raincoat!',
   },
@@ -392,9 +443,22 @@ for (var i = 0; i < 15; i++) {
 // State
 var animTimers = {};
 var previewTimer = null;
-var animSpeed = 400;
+var animSpeed = 600;
 var activeState = null;
 var activeSensory = 'standard';
+var activeCharType = localStorage.getItem('char-type') || 'human';
+
+function getFrames(state) {
+  return state.frames[activeCharType];
+}
+
+function getBg(state) {
+  if (state.bg !== 'assets/backgrounds/bg-sunny.png') return state.bg;
+  var hour = new Date().getHours();
+  if (hour >= 20 || hour < 5) return 'assets/backgrounds/bg-night.png';
+  if (hour >= 17) return 'assets/backgrounds/bg-sunset.png';
+  return state.bg;
+}
 
 // === Build character cards ===
 function buildCard(state) {
@@ -406,7 +470,8 @@ function buildCard(state) {
   preview.className = 'char-preview';
   var img = document.createElement('img');
   img.id = 'card-' + state.id;
-  img.src = state.frames[0];
+  var frames = getFrames(state);
+  img.src = frames[0];
   img.alt = state.label;
   preview.appendChild(img);
 
@@ -433,8 +498,8 @@ function buildCard(state) {
 
   var frame = 0;
   animTimers[state.id] = setInterval(function() {
-    frame = (frame + 1) % state.frames.length;
-    img.src = state.frames[frame];
+    frame = (frame + 1) % frames.length;
+    img.src = frames[frame];
   }, animSpeed);
 
   card.addEventListener('click', function() { selectState(state); });
@@ -484,7 +549,7 @@ function selectState(state) {
     c.classList.toggle('active', c.dataset.id === state.id);
   });
 
-  fullPreview.style.backgroundImage = 'url(\'' + state.bg + '\')';
+  fullPreview.style.backgroundImage = 'url(\'' + getBg(state) + '\')';
 
   // Particles depend on sensory mode
   applySensoryToPreview();
@@ -496,18 +561,17 @@ function selectState(state) {
   // Speak the advice
   if (typeof TTS !== 'undefined') TTS.speak(state, activeSensory);
 
-  // Restart preview walk animation
+  // Restart preview animation
+  var frames = getFrames(state);
   if (previewTimer) clearInterval(previewTimer);
   if (activeSensory === 'still') {
-    // Still: static, no animation
-    previewChar.src = state.frames[0];
+    previewChar.src = frames[0];
   } else {
-    // Standard & Calm: same walk animation
     var frame = 0;
-    previewChar.src = state.frames[0];
+    previewChar.src = frames[0];
     previewTimer = setInterval(function() {
-      frame = (frame + 1) % state.frames.length;
-      previewChar.src = state.frames[frame];
+      frame = (frame + 1) % frames.length;
+      previewChar.src = frames[frame];
     }, animSpeed);
   }
 }
@@ -534,13 +598,14 @@ function selectSensory(modeId) {
   STATES.forEach(function(state) {
     clearInterval(animTimers[state.id]);
     var cardImg = document.getElementById('card-' + state.id);
+    var frames = getFrames(state);
     if (activeSensory === 'still') {
-      cardImg.src = state.frames[0];
+      cardImg.src = frames[0];
     } else {
       var frame = 0;
       animTimers[state.id] = setInterval(function() {
-        frame = (frame + 1) % state.frames.length;
-        cardImg.src = state.frames[frame];
+        frame = (frame + 1) % frames.length;
+        cardImg.src = frames[frame];
       }, animSpeed);
     }
   });
@@ -577,13 +642,14 @@ speedSlider.addEventListener('input', function() {
   STATES.forEach(function(state) {
     clearInterval(animTimers[state.id]);
     var cardImg = document.getElementById('card-' + state.id);
+    var frames = getFrames(state);
     if (activeSensory === 'still') {
-      cardImg.src = state.frames[0];
+      cardImg.src = frames[0];
     } else {
       var frame = 0;
       animTimers[state.id] = setInterval(function() {
-        frame = (frame + 1) % state.frames.length;
-        cardImg.src = state.frames[frame];
+        frame = (frame + 1) % frames.length;
+        cardImg.src = frames[frame];
       }, animSpeed);
     }
   });
@@ -592,6 +658,10 @@ speedSlider.addEventListener('input', function() {
 });
 
 // === Init ===
+// Restore character type toggle
+document.querySelectorAll('.type-btn').forEach(function(b) {
+  b.classList.toggle('active', b.dataset.type === activeCharType);
+});
 selectSensory('standard');
 
 // === TTS toggle ===
@@ -614,6 +684,29 @@ function toggleTTS() {
     document.getElementById('ttsToggle').classList.add('muted');
   }
 })();
+
+// === Character type toggle ===
+function switchCharType(type) {
+  activeCharType = type;
+  localStorage.setItem('char-type', type);
+
+  document.querySelectorAll('.type-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+
+  // Rebuild cards with new character type
+  rebuildCards();
+
+  // Update preview
+  if (activeState) selectState(activeState);
+}
+
+function rebuildCards() {
+  // Clear timers
+  STATES.forEach(function(state) { clearInterval(animTimers[state.id]); });
+  while (grid.firstChild) grid.removeChild(grid.firstChild);
+  STATES.forEach(function(state) { grid.appendChild(buildCard(state)); });
+}
 
 // === Menu toggle ===
 function toggleMenu() {
