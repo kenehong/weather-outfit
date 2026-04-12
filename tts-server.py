@@ -2,16 +2,19 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import subprocess
 
+PIPER_BIN = '/home/kenehong/piper/piper/piper'
+PIPER_MODEL = '/home/kenehong/piper/en_US-amy-medium.onnx'
+
 class TTSHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         query = parse_qs(urlparse(self.path).query)
         text = query.get('text', [''])[0]
-        speed = query.get('speed', ['150'])[0]
-        volume = query.get('volume', ['80'])[0]
         if text:
+            safe_text = text.replace('"', '\\"')
             subprocess.Popen(
-                'espeak -s {} -a {} --stdout "{}" | aplay -D plughw:3,0'.format(speed, volume, text),
-                shell=True, stderr=subprocess.DEVNULL
+                'echo "{}" | {} --model {} --output-raw | aplay -D default -r 22050 -f S16_LE -c 1'.format(
+                    safe_text, PIPER_BIN, PIPER_MODEL),
+                shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
