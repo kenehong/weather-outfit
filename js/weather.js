@@ -18,6 +18,14 @@ async function fetchWeather(lat, lon) {
   return await res.json();
 }
 
+async function geocodeCity(q) {
+  var url = 'https://geocoding-api.open-meteo.com/v1/search' +
+    '?name=' + encodeURIComponent(q) + '&count=5&language=en';
+  var res = await fetch(url);
+  if (!res.ok) return { results: [] };
+  return await res.json();
+}
+
 async function fetchLocationName(lat, lon) {
   var url =
     'https://nominatim.openstreetmap.org/reverse' +

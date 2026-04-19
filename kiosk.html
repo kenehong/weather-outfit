@@ -66,6 +66,40 @@
   }
   .settings-panel.open { transform: translateX(0); }
 
+  /* Location search */
+  .loc-section { padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); position: relative; }
+  .loc-search-wrap { position: relative; margin-top: 0.35rem; }
+  .loc-search-input {
+    width: 100%; padding: 0.5rem 0.6rem;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,210,80,0.2);
+    color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
+    outline: none; border-radius: 4px;
+  }
+  .loc-search-input:focus { border-color: var(--border-active); }
+  .loc-search-input::placeholder { color: rgba(255,210,80,0.3); }
+  .loc-results {
+    position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px;
+    max-height: 50vh; overflow-y: auto; z-index: 60;
+    background: var(--navy); border: 1px solid rgba(255,210,80,0.2);
+    border-radius: 4px; display: none;
+  }
+  .loc-results.open { display: block; }
+  .loc-item {
+    padding: 0.5rem 0.6rem; cursor: pointer;
+    border-bottom: 1px solid rgba(255,210,80,0.08);
+    font-size: 0.95rem; color: var(--text);
+  }
+  .loc-item:last-child { border-bottom: none; }
+  .loc-item:hover { background: rgba(255,210,80,0.08); }
+  .loc-item .loc-region { color: var(--gold-dim); font-size: 0.85rem; margin-left: 0.25rem; }
+  .loc-reset {
+    margin-top: 0.35rem; background: none; border: none;
+    color: var(--gold-dim); cursor: pointer;
+    font-family: var(--font-body); font-size: 0.85rem; padding: 0;
+    text-decoration: underline;
+  }
+  .loc-reset:hover { color: var(--gold); }
+
   /* Character type toggle */
   .char-type-section { padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
   .char-type-toggle {
@@ -243,6 +277,16 @@
 <div class="settings-overlay" id="settingsOverlay" onclick="toggleMenu()"></div>
 
 <div class="settings-panel" id="settingsPanel">
+  <!-- Location Search -->
+  <div class="loc-section">
+    <div class="section-label">LOCATION</div>
+    <div class="loc-search-wrap">
+      <input type="text" class="loc-search-input" id="locSearchInput" placeholder="Search city..." autocomplete="off">
+      <div class="loc-results" id="locResults"></div>
+    </div>
+    <button class="loc-reset" id="locReset" onclick="clearOverrideLocation()">Use my location</button>
+  </div>
+
   <!-- Character Type Toggle -->
   <div class="char-type-section">
     <div class="section-label">CHARACTER</div>
@@ -612,6 +656,75 @@ function toggleMenu() {
 <script src="js/weather.js"></script>
 <script src="js/app.js"></script>
 <script>
+  // === Location search ===
+  (function() {
+    var input = document.getElementById('locSearchInput');
+    var results = document.getElementById('locResults');
+    var searchTimer = null;
+
+    function clearResults() {
+      while (results.firstChild) results.removeChild(results.firstChild);
+      results.classList.remove('open');
+    }
+
+    function showMessage(text) {
+      clearResults();
+      var item = document.createElement('div');
+      item.className = 'loc-item';
+      item.textContent = text;
+      results.appendChild(item);
+      results.classList.add('open');
+    }
+
+    input.addEventListener('input', function() {
+      clearTimeout(searchTimer);
+      var q = input.value.trim();
+      if (q.length < 2) { clearResults(); return; }
+
+      searchTimer = setTimeout(async function() {
+        try {
+          var data = await geocodeCity(q);
+          if (!data.results || data.results.length === 0) {
+            showMessage('No results found');
+            return;
+          }
+          clearResults();
+          data.results.forEach(function(r) {
+            var item = document.createElement('div');
+            item.className = 'loc-item';
+
+            var city = document.createElement('span');
+            city.textContent = r.name;
+            var region = document.createElement('span');
+            region.className = 'loc-region';
+            region.textContent = [r.admin1, r.country].filter(Boolean).join(', ');
+            item.appendChild(city);
+            item.appendChild(region);
+
+            item.addEventListener('click', function() {
+              var displayName = r.name +
+                (r.admin1 ? ', ' + r.admin1 : '') +
+                (r.country && r.country_code !== 'US' ? ', ' + r.country : '');
+              setOverrideLocation(r.latitude, r.longitude, displayName);
+              input.value = '';
+              clearResults();
+            });
+
+            results.appendChild(item);
+          });
+          results.classList.add('open');
+        } catch (err) {
+          showMessage('Search failed');
+        }
+      }, 300);
+    });
+
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', function(e) {
+      if (!results.contains(e.target) && e.target !== input) clearResults();
+    });
+  })();
+
   initLiveWeather();
 </script>
 
