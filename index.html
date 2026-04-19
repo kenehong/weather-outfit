@@ -402,6 +402,14 @@ var activeCharType = localStorage.getItem('char-type') || 'animal';
 
 function getFrames(state) { return state.frames[activeCharType]; }
 
+function getBg(state) {
+  if (state.bg !== 'assets/backgrounds/bg-sunny.png') return state.bg;
+  var hour = new Date().getHours();
+  if (hour >= 20 || hour < 5) return 'assets/backgrounds/bg-night.png';
+  if (hour >= 17) return 'assets/backgrounds/bg-sunset.png';
+  return state.bg;
+}
+
 // === Build character cards ===
 function buildCard(state) {
   var card = document.createElement('div');
@@ -491,7 +499,7 @@ function selectState(state) {
     c.classList.toggle('active', c.dataset.id === state.id);
   });
 
-  fullPreview.style.backgroundImage = 'url(\'' + state.bg + '\')';
+  fullPreview.style.backgroundImage = 'url(\'' + getBg(state) + '\')';
 
   // Particles depend on sensory mode
   applySensoryToPreview();
