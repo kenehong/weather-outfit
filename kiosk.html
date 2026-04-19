@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Weather Outfit</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Press Start 2P', monospace;
+    --font-body: 'VT323', monospace;
+    --gold: oklch(84% 0.19 95);
+    --gold-dim: oklch(70% 0.15 95);
+    --navy: oklch(14% 0.03 275);
+    --navy-light: oklch(18% 0.03 275);
+    --text: oklch(95% 0.03 90);
+    --text-dim: oklch(70% 0.03 90);
+    --border: rgba(255,210,80,0.15);
+    --border-active: rgba(255,210,80,0.6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    font-family: var(--font-body); background: var(--navy); color: var(--text);
+    height: 100%; overflow: hidden;
+    /* iOS safe area */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .main-layout { display: flex; height: 100%; position: relative; }
+
+  /* ===== Menu button ===== */
+  .menu-toggle {
+    position: fixed; top: calc(0.75rem + env(safe-area-inset-top)); left: 0.75rem; z-index: 60;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); border-radius: 8px;
+    cursor: pointer; color: var(--gold); font-size: 1.2rem;
+    transition: background 0.2s;
+  }
+  .menu-toggle:hover { background: rgba(0,0,0,0.7); }
+  .menu-toggle.open { background: rgba(0,0,0,0.7); }
+
+  /* ===== Settings overlay ===== */
+  .settings-overlay {
+    position: fixed; inset: 0; z-index: 49;
+    background: rgba(0,0,0,0.5);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .settings-overlay.open { opacity: 1; pointer-events: auto; }
+
+  /* ===== Settings panel ===== */
+  .settings-panel {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+    width: 280px;
+    padding: calc(3.5rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--navy);
+    display: flex; flex-direction: column; gap: 0.75rem;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .settings-panel.open { transform: translateX(0); }
+
+  /* Character type toggle */
+  .char-type-section { padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .char-type-toggle {
+    display: flex; gap: 0.35rem; margin-top: 0.35rem;
+  }
+  .type-btn {
+    flex: 1; padding: 0.4rem 0.5rem; cursor: pointer;
+    border: 2px solid rgba(255,210,80,0.15);
+    background: transparent; color: var(--text-dim);
+    font-family: var(--font-display); font-size: 0.3rem;
+    letter-spacing: 0.05em; transition: all 0.2s;
+  }
+  .type-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+  .type-btn.active {
+    border-color: var(--border-active); background: rgba(255,210,80,0.06);
+    color: var(--gold);
+  }
+
+  /* Section label */
+  .section-label {
+    font-family: var(--font-display); font-size: 0.35rem;
+    color: var(--gold-dim); letter-spacing: 0.08em;
+    text-transform: uppercase; margin-top: 0.25rem;
+  }
+
+  /* Sensory modes */
+  .sensory-section {
+    padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+  .sensory-modes {
+    display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.35rem;
+  }
+  .sensory-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.4rem 0.5rem; cursor: pointer;
+    border: 2px solid rgba(255,210,80,0.15);
+    background: transparent; color: var(--text); font-family: var(--font-body);
+    font-size: 0.95rem; text-align: left; transition: border-color 0.2s;
+  }
+  .sensory-btn:hover { border-color: var(--gold-dim); }
+  .sensory-btn.active { border-color: var(--border-active); background: rgba(255,210,80,0.06); }
+  .sensory-icon { font-size: 1.1rem; width: 1.5rem; text-align: center; }
+  .sensory-name {
+    font-family: var(--font-display); font-size: 0.3rem;
+    color: var(--gold); letter-spacing: 0.05em;
+  }
+  .sensory-desc { font-size: 0.8rem; color: var(--text-dim); }
+
+  /* Voice section */
+  .sound-section {
+    padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+  .voice-row {
+    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem;
+  }
+  .voice-label { font-size: 1rem; color: var(--text); flex: 1; }
+  .voice-label.muted { opacity: 0.5; }
+
+  /* Toggle switch */
+  .toggle-switch {
+    position: relative; width: 44px; height: 24px; flex-shrink: 0;
+    background: rgba(255,255,255,0.15); border-radius: 12px;
+    cursor: pointer; transition: background 0.2s; border: none;
+  }
+  .toggle-switch.on { background: var(--gold); }
+  .toggle-switch .toggle-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: white; transition: transform 0.2s;
+  }
+  .toggle-switch.on .toggle-knob { transform: translateX(20px); }
+
+  /* Volume slider */
+  .volume-row {
+    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem;
+  }
+  .volume-row .vol-icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+  .volume-row input[type="range"] { flex: 1; accent-color: var(--gold); }
+  .volume-row .vol-val { font-size: 0.9rem; color: var(--gold); min-width: 32px; text-align: right; }
+
+  /* Speed section */
+  .speed-section {
+    padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+  .speed-row {
+    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem;
+  }
+  .speed-row input[type="range"] { flex: 1; accent-color: var(--gold); }
+  .speed-val { font-size: 0.9rem; color: var(--gold); min-width: 40px; }
+
+  /* ===== Main content — fullscreen preview ===== */
+  .content {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .full-preview {
+    position: relative; width: 100%; flex: 1;
+    background-size: cover; background-position: center bottom;
+    overflow: hidden; transition: background-image 0.5s, filter 0.5s;
+  }
+  .full-preview .scanline {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,0.03) 2px 4px);
+    pointer-events: none; z-index: 5;
+  }
+  .full-preview .character {
+    position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
+    height: 55%; aspect-ratio: 1; image-rendering: pixelated; z-index: 3;
+    cursor: pointer;
+    transition: transform 0.1s ease-out;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .full-preview .character:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+  .full-preview .character img {
+    width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated;
+    pointer-events: none;
+  }
+  .full-preview .rain-overlay, .full-preview .snow-overlay,
+  .full-preview .wind-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.5s;
+  }
+  .full-preview .rain-overlay.show, .full-preview .snow-overlay.show,
+  .full-preview .wind-overlay.show { opacity: 1; }
+  .raindrop { position: absolute; width: 2px; background: rgba(200,220,255,0.5); animation: fall linear infinite; }
+  @keyframes fall { 0% { transform: translateY(-20px); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh); opacity: 0.2; } }
+  .snowflake { position: absolute; color: rgba(255,255,255,0.7); font-size: 0.8rem; animation: snowfall linear infinite; }
+  @keyframes snowfall { 0% { transform: translateY(-10px) rotate(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0.3; } }
+
+  /* Wind/leaf particles */
+  .leaf { position: absolute; font-size: 0.7rem; animation: leafDrift linear infinite; }
+  @keyframes leafDrift {
+    0% { transform: translate(0, -10px) rotate(0); opacity: 0; }
+    5% { opacity: 0.8; }
+    100% { transform: translate(calc(100vw + 40px), 60vh) rotate(540deg); opacity: 0; }
+  }
+
+  .preview-info {
+    position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 16px;
+    background: rgba(10,10,30,0.6); backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,210,80,0.3);
+    padding: 0.75rem 1rem; z-index: 10;
+  }
+  .preview-info .p-label {
+    font-family: var(--font-display); font-size: 0.5rem;
+    color: var(--gold); margin-bottom: 0.25rem;
+  }
+  .preview-info .p-temp {
+    font-family: var(--font-display); font-size: 1.25rem; color: var(--text);
+  }
+  .preview-info .p-advice {
+    font-size: 1.1rem; color: var(--text); opacity: 0.8; margin-top: 0.25rem;
+  }
+  .p-location {
+    margin-top: 6px;
+    font-size: 14px;
+    opacity: 0.85;
+  }
+
+  /* Sensory visual states */
+  .full-preview.calm .rain-overlay, .full-preview.calm .snow-overlay,
+  .full-preview.calm .wind-overlay { opacity: 0 !important; }
+  .full-preview.still .rain-overlay, .full-preview.still .snow-overlay,
+  .full-preview.still .wind-overlay { opacity: 0 !important; }
+</style>
+</head>
+<body>
+
+<div class="main-layout">
+
+<button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">&#9776;</button>
+<div class="settings-overlay" id="settingsOverlay" onclick="toggleMenu()"></div>
+
+<div class="settings-panel" id="settingsPanel">
+  <!-- Character Type Toggle -->
+  <div class="char-type-section">
+    <div class="section-label">CHARACTER</div>
+    <div class="char-type-toggle">
+      <button class="type-btn active" data-type="animal" onclick="switchCharType('animal')">ANIMAL</button>
+      <button class="type-btn" data-type="human" onclick="switchCharType('human')">HUMAN</button>
+    </div>
+  </div>
+
+  <!-- Sensory Modes -->
+  <div class="sensory-section">
+    <div class="section-label">SENSORY MODE</div>
+    <div class="sensory-modes" id="sensoryModes"></div>
+  </div>
+
+  <!-- Voice Toggle + Volume -->
+  <div class="sound-section">
+    <div class="section-label">VOICE</div>
+    <div class="voice-row">
+      <span class="voice-label" id="voiceLabel">Sound On</span>
+      <button class="toggle-switch on" id="ttsToggle" onclick="toggleTTS()">
+        <span class="toggle-knob"></span>
+      </button>
+    </div>
+    <div class="volume-row" id="volumeRow">
+      <span class="vol-icon">&#x1f509;</span>
+      <input type="range" id="volumeSlider" min="0" max="100" value="80" step="5">
+      <span class="vol-val" id="volumeVal">80%</span>
+    </div>
+  </div>
+
+  <!-- Walk Speed -->
+  <div class="speed-section">
+    <div class="section-label">WALK SPEED</div>
+    <div class="speed-row">
+      <input type="range" id="speedSlider" min="150" max="800" value="600" step="50">
+      <span class="speed-val" id="speedVal">600ms</span>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="full-preview" id="fullPreview">
+    <div class="scanline"></div>
+    <div class="rain-overlay" id="rainOverlay"></div>
+    <div class="snow-overlay" id="snowOverlay"></div>
+    <div class="wind-overlay" id="windOverlay"></div>
+    <div class="character" id="characterBtn" role="button" aria-label="Tap character for outfit tip"><img id="previewChar" src="" alt=""></div>
+    <div class="preview-info">
+      <div class="p-label" id="pLabel">--</div>
+      <div class="p-temp" id="pTemp">--</div>
+      <div class="p-advice" id="pAdvice">--</div>
+      <div class="p-location" id="locationText"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+var STATES = [
+  {
+    id: 'hot', label: 'HOT',
+    temp: '68\u00B0F+ (20\u00B0C+)',
+    outfit: 'T-shirt + shorts + sunglasses',
+    bg: 'assets/backgrounds/bg-sunny.png',
+    frames: {
+      animal: ['assets/characters/shiba-hot-1.png', 'assets/characters/shiba-hot-2.png'],
+      human: ['assets/characters/kid-hot-1.png', 'assets/characters/kid-hot-2.png'],
+    },
+    rain: false, snow: false, wind: false,
+    advice: 'Light clothes are perfect!',
+  },
+  {
+    id: 'cool', label: 'COOL',
+    temp: '50-68\u00B0F (10-20\u00B0C)',
+    outfit: 'Hoodie + long pants',
+    bg: 'assets/backgrounds/bg-sunny.png',
+    frames: {
+      animal: ['assets/characters/shiba-cool-1.png', 'assets/characters/shiba-cool-2.png'],
+      human: ['assets/characters/kid-cool-1.png', 'assets/characters/kid-cool-2.png'],
+    },
+    rain: false, snow: false, wind: true,
+    advice: 'Light jacket or hoodie!',
+  },
+  {
+    id: 'cold', label: 'COLD',
+    temp: '32-50\u00B0F (0-10\u00B0C)',
+    outfit: 'Winter coat + beanie',
+    bg: 'assets/backgrounds/bg-sunny.png',
+    frames: {
+      animal: ['assets/characters/cat-cold-1.png', 'assets/characters/cat-cold-2.png'],
+      human: ['assets/characters/kid-cold-1.png', 'assets/characters/kid-cold-2.png'],
+    },
+    rain: false, snow: false, wind: true,
+    advice: 'Wear a warm coat!',
+  },
+  {
+    id: 'snowy', label: 'SNOWY',
+    temp: 'Below 32\u00B0F (0\u00B0C)',
+    outfit: 'Puffer coat + scarf + earmuffs',
+    bg: 'assets/backgrounds/bg-snowy.png',
+    frames: {
+      animal: ['assets/characters/bear-cold-1.png', 'assets/characters/bear-cold-2.png'],
+      human: ['assets/characters/kid-snowy-1.png', 'assets/characters/kid-snowy-2.png'],
+    },
+    rain: false, snow: true, wind: false,
+    advice: 'Bundle up! It\'s freezing!',
+  },
+  {
+    id: 'rainy', label: 'RAINY',
+    temp: 'Any temp + rain',
+    outfit: 'Raincoat + boots + umbrella',
+    bg: 'assets/backgrounds/bg-rainy.png',
+    frames: {
+      animal: ['assets/characters/duck-rainy-1.png', 'assets/characters/duck-rainy-2.png'],
+      human: ['assets/characters/kid-rainy-1.png', 'assets/characters/kid-rainy-2.png'],
+    },
+    rain: true, snow: false, wind: false,
+    advice: 'Grab your raincoat!',
+  },
+];
+
+var SENSORY = [
+  { id: 'standard', icon: '\u2600\uFE0F', name: 'STANDARD', desc: 'Weather effects + walk animation' },
+  { id: 'calm',     icon: '\uD83C\uDF19', name: 'CALM',     desc: 'No effects, walk animation only' },
+  { id: 'still',    icon: '\u23F8\uFE0F',  name: 'STILL',    desc: 'Static image, no motion' },
+];
+
+// DOM refs
+var rainOverlay = document.getElementById('rainOverlay');
+var snowOverlay = document.getElementById('snowOverlay');
+var windOverlay = document.getElementById('windOverlay');
+var previewChar = document.getElementById('previewChar');
+var fullPreview = document.getElementById('fullPreview');
+var sensoryContainer = document.getElementById('sensoryModes');
+
+// Build rain particles
+for (var i = 0; i < 40; i++) {
+  var d = document.createElement('div');
+  d.className = 'raindrop';
+  Object.assign(d.style, { left: Math.random()*100+'%', height: (8+Math.random()*12)+'px',
+    animationDuration: (0.4+Math.random()*0.4)+'s', animationDelay: Math.random()+'s' });
+  rainOverlay.appendChild(d);
+}
+// Build snow particles
+for (var i = 0; i < 25; i++) {
+  var f = document.createElement('div');
+  f.className = 'snowflake'; f.textContent = '\u2744';
+  Object.assign(f.style, { left: Math.random()*100+'%', fontSize: (0.5+Math.random()*0.7)+'rem',
+    animationDuration: (3+Math.random()*4)+'s', animationDelay: Math.random()*3+'s' });
+  snowOverlay.appendChild(f);
+}
+// Build wind/leaf particles
+for (var i = 0; i < 15; i++) {
+  var lf = document.createElement('div');
+  lf.className = 'leaf'; lf.textContent = '\uD83C\uDF43';
+  Object.assign(lf.style, { left: (-10 - Math.random()*20)+'%', top: (Math.random()*60)+'%',
+    fontSize: (0.5+Math.random()*0.5)+'rem',
+    animationDuration: (5+Math.random()*6)+'s', animationDelay: Math.random()*8+'s' });
+  windOverlay.appendChild(lf);
+}
+
+// State
+var previewTimer = null;
+var animSpeed = 600;
+var activeState = null;
+var activeSensory = localStorage.getItem('sensory-mode') || 'standard';
+var activeCharType = localStorage.getItem('char-type') || 'human';
+
+function getFrames(state) {
+  return state.frames[activeCharType];
+}
+
+function getBg(state) {
+  if (state.bg !== 'assets/backgrounds/bg-sunny.png') return state.bg;
+  var hour = new Date().getHours();
+  if (hour >= 20 || hour < 5) return 'assets/backgrounds/bg-night.png';
+  if (hour >= 17) return 'assets/backgrounds/bg-sunset.png';
+  return state.bg;
+}
+
+// === Build sensory buttons ===
+function buildSensoryBtn(mode) {
+  var btn = document.createElement('button');
+  btn.className = 'sensory-btn';
+  btn.dataset.id = mode.id;
+
+  var icon = document.createElement('span');
+  icon.className = 'sensory-icon';
+  icon.textContent = mode.icon;
+
+  var text = document.createElement('div');
+  var name = document.createElement('div');
+  name.className = 'sensory-name';
+  name.textContent = mode.name;
+  var desc = document.createElement('div');
+  desc.className = 'sensory-desc';
+  desc.textContent = mode.desc;
+  text.appendChild(name);
+  text.appendChild(desc);
+
+  btn.appendChild(icon);
+  btn.appendChild(text);
+
+  btn.addEventListener('click', function() { selectSensory(mode.id); });
+  return btn;
+}
+
+SENSORY.forEach(function(mode) {
+  sensoryContainer.appendChild(buildSensoryBtn(mode));
+});
+
+// === Select character state (driven by weather, not user click) ===
+var liveTemp = null;
+function selectState(state, skipTTS) {
+  activeState = state;
+
+  fullPreview.style.backgroundImage = 'url(\'' + getBg(state) + '\')';
+  applySensoryToPreview();
+
+  document.getElementById('pLabel').textContent = state.label;
+  document.getElementById('pTemp').textContent = liveTemp || state.temp;
+  document.getElementById('pAdvice').textContent = state.advice;
+
+  // Restart preview animation
+  var frames = getFrames(state);
+  if (previewTimer) clearInterval(previewTimer);
+  if (activeSensory === 'still') {
+    previewChar.src = frames[0];
+  } else {
+    var frame = 0;
+    previewChar.src = frames[0];
+    previewTimer = setInterval(function() {
+      frame = (frame + 1) % frames.length;
+      previewChar.src = frames[frame];
+    }, animSpeed);
+  }
+}
+
+// === Select sensory mode ===
+function selectSensory(modeId) {
+  activeSensory = modeId;
+  localStorage.setItem('sensory-mode', modeId);
+
+  document.querySelectorAll('.sensory-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.id === modeId);
+  });
+
+  applySensoryToPreview();
+
+  if (typeof TTS !== 'undefined') TTS.reset();
+  if (activeState) selectState(activeState);
+}
+
+function applySensoryToPreview() {
+  if (!activeState) return;
+
+  fullPreview.classList.remove('calm', 'still');
+  if (activeSensory === 'calm') fullPreview.classList.add('calm');
+  if (activeSensory === 'still') fullPreview.classList.add('still');
+
+  if (activeSensory === 'standard') {
+    rainOverlay.classList.toggle('show', activeState.rain);
+    snowOverlay.classList.toggle('show', activeState.snow);
+    windOverlay.classList.toggle('show', activeState.wind);
+  } else {
+    rainOverlay.classList.remove('show');
+    snowOverlay.classList.remove('show');
+    windOverlay.classList.remove('show');
+  }
+}
+
+// === Speed control ===
+var speedSlider = document.getElementById('speedSlider');
+var speedVal = document.getElementById('speedVal');
+speedSlider.addEventListener('input', function() {
+  animSpeed = parseInt(speedSlider.value);
+  speedVal.textContent = animSpeed + 'ms';
+  if (activeState) selectState(activeState);
+});
+
+// === Init ===
+document.querySelectorAll('.type-btn').forEach(function(b) {
+  b.classList.toggle('active', b.dataset.type === activeCharType);
+});
+selectSensory(activeSensory);
+
+// === TTS toggle ===
+function toggleTTS() {
+  var on = TTS.toggle();
+  var toggle = document.getElementById('ttsToggle');
+  toggle.classList.toggle('on', on);
+  document.getElementById('voiceLabel').textContent = on ? 'Sound On' : 'Sound Off';
+  document.getElementById('voiceLabel').classList.toggle('muted', !on);
+  document.getElementById('volumeRow').style.opacity = on ? '1' : '0.35';
+  document.getElementById('volumeSlider').disabled = !on;
+}
+
+// === Volume control ===
+var volumeSlider = document.getElementById('volumeSlider');
+var volumeVal = document.getElementById('volumeVal');
+var savedVolume = localStorage.getItem('tts-volume');
+if (savedVolume !== null) {
+  volumeSlider.value = savedVolume;
+  volumeVal.textContent = savedVolume + '%';
+}
+volumeSlider.addEventListener('input', function() {
+  var vol = parseInt(volumeSlider.value);
+  volumeVal.textContent = vol + '%';
+  localStorage.setItem('tts-volume', vol);
+  if (typeof TTS !== 'undefined' && TTS.setVolume) TTS.setVolume(vol / 100);
+  if (typeof CharacterVoice !== 'undefined') CharacterVoice.setVolume(vol / 100);
+});
+
+// Init TTS button state
+(function() {
+  if (typeof TTS !== 'undefined') {
+    var on = TTS.isEnabled();
+    document.getElementById('ttsToggle').classList.toggle('on', on);
+    document.getElementById('voiceLabel').textContent = on ? 'Sound On' : 'Sound Off';
+    document.getElementById('voiceLabel').classList.toggle('muted', !on);
+    document.getElementById('volumeRow').style.opacity = on ? '1' : '0.35';
+    document.getElementById('volumeSlider').disabled = !on;
+    if (TTS.setVolume) {
+      var vol = parseInt(localStorage.getItem('tts-volume') || '80');
+      TTS.setVolume(vol / 100);
+    }
+  }
+})();
+
+// === Character type toggle ===
+function switchCharType(type) {
+  activeCharType = type;
+  localStorage.setItem('char-type', type);
+
+  document.querySelectorAll('.type-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+
+  if (activeState) selectState(activeState);
+}
+
+// === Character click → voice comment ===
+document.getElementById('characterBtn').addEventListener('click', function() {
+  if (activeState && typeof CharacterVoice !== 'undefined') {
+    CharacterVoice.play(activeState);
+  }
+});
+
+// === Menu toggle ===
+function toggleMenu() {
+  var panel = document.getElementById('settingsPanel');
+  var overlay = document.getElementById('settingsOverlay');
+  var btn = document.getElementById('menuToggle');
+  var isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  overlay.classList.toggle('open');
+  btn.classList.toggle('open');
+  btn.textContent = isOpen ? '\u2630' : '\u2715';
+}
+</script>
+
+<script src="js/tts.js"></script>
+<script src="js/character-voice.js"></script>
+<script src="js/config.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/app.js"></script>
+<script>
+  initLiveWeather();
+</script>
+
+</body>
+</html>
