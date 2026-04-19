@@ -260,13 +260,10 @@
   .p-search-results .loc-item:last-child { border-bottom: none; }
   .p-search-results .loc-item:hover { background: rgba(255,210,80,0.1); }
   .p-search-results .loc-item .loc-region { color: var(--gold-dim); font-size: 0.8rem; margin-left: 0.25rem; }
-  .p-search-reset {
-    margin-top: 0.35rem; background: none; border: none;
-    color: var(--gold-dim); cursor: pointer;
-    font-family: var(--font-body); font-size: 0.8rem; padding: 0;
-    text-decoration: underline;
+  .p-search-results .loc-item.use-gps {
+    color: var(--gold); font-weight: 500;
+    border-bottom-color: rgba(255,210,80,0.25);
   }
-  .p-search-reset:hover { color: var(--gold); }
 
   /* Sensory visual states */
   .full-preview.calm .rain-overlay, .full-preview.calm .snow-overlay,
@@ -339,7 +336,6 @@
       <div class="p-search-wrap">
         <input type="text" class="p-search-input" id="locSearchInput" placeholder="Search city..." autocomplete="off">
         <div class="p-search-results" id="locResults"></div>
-        <button class="p-search-reset" id="locReset" onclick="clearOverrideLocation()">Use my location</button>
       </div>
     </div>
   </div>
@@ -668,8 +664,21 @@ function toggleMenu() {
       results.classList.remove('open');
     }
 
+    function buildUseGpsItem() {
+      var item = document.createElement('div');
+      item.className = 'loc-item use-gps';
+      item.textContent = '\uD83D\uDCCD  Use my location';
+      item.addEventListener('click', function() {
+        clearOverrideLocation();
+        input.value = '';
+        clearResults();
+      });
+      return item;
+    }
+
     function showMessage(text) {
       clearResults();
+      results.appendChild(buildUseGpsItem());
       var item = document.createElement('div');
       item.className = 'loc-item';
       item.textContent = text;
@@ -690,6 +699,7 @@ function toggleMenu() {
             return;
           }
           clearResults();
+          results.appendChild(buildUseGpsItem());
           data.results.forEach(function(r) {
             var item = document.createElement('div');
             item.className = 'loc-item';

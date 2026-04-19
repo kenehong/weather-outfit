@@ -18,12 +18,17 @@ function pickState(tempF, condition) {
 }
 
 function extractPlace(address) {
-  return address.town ||
+  var city = address.city ||
+    address.town ||
     address.village ||
     address.hamlet ||
-    address.city ||
     address.suburb ||
+    address.neighbourhood ||
+    address.county ||
     '';
+  var region = address.state || address.region || address.country || '';
+  if (city && region && city !== region) return city + ', ' + region;
+  return city || region || '';
 }
 
 async function loadWeatherForLocation(lat, lon, displayName) {
@@ -60,9 +65,10 @@ async function loadWeatherForLocation(lat, lon, displayName) {
     var locationData = await fetchLocationName(lat, lon);
     var address = locationData.address || {};
     var place = extractPlace(address);
-    if (place) locationEl.textContent = place;
+    locationEl.textContent = place || (lat.toFixed(2) + ', ' + lon.toFixed(2));
   } catch (err) {
     console.warn('Location name fetch failed:', err);
+    locationEl.textContent = lat.toFixed(2) + ', ' + lon.toFixed(2);
   }
 }
 
