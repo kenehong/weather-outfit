@@ -60,6 +60,7 @@ var TTS = (function() {
 
   function setVolume(vol) {
     masterVolume = Math.max(0, Math.min(1, vol));
+    lastSpoken = '';
   }
 
   function toggle() {
@@ -68,8 +69,8 @@ var TTS = (function() {
     if (!enabled) {
       clearTimeout(speakTimeout);
       if (synth) synth.cancel();
-      lastSpoken = '';
     }
+    lastSpoken = '';
     return enabled;
   }
 

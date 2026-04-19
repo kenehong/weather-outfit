@@ -9,11 +9,15 @@ class TTSHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         query = parse_qs(urlparse(self.path).query)
         text = query.get('text', [''])[0]
+        volume = query.get('volume', ['80'])[0]
         if text:
             safe_text = text.replace('"', '\\"')
+            vol_factor = max(0, min(100, int(volume))) / 100.0
             subprocess.Popen(
-                'echo "{}" | {} --model {} --output-raw | aplay -D default -r 22050 -f S16_LE -c 1'.format(
-                    safe_text, PIPER_BIN, PIPER_MODEL),
+                'echo "{}" | {} --model {} --output-raw'
+                ' | sox -t raw -r 22050 -e signed -b 16 -c 1 - -t raw - vol {}'
+                ' | aplay -D default -r 22050 -f S16_LE -c 1'.format(
+                    safe_text, PIPER_BIN, PIPER_MODEL, vol_factor),
                 shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
         self.send_response(200)

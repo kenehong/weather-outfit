@@ -143,9 +143,16 @@
   .full-preview .character {
     position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
     height: 55%; aspect-ratio: 1; image-rendering: pixelated; z-index: 3;
+    cursor: pointer;
+    transition: transform 0.1s ease-out;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .full-preview .character:active {
+    transform: translateX(-50%) scale(0.95);
   }
   .full-preview .character img {
     width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated;
+    pointer-events: none;
   }
   .full-preview .rain-overlay, .full-preview .snow-overlay,
   .full-preview .wind-overlay {
@@ -243,7 +250,7 @@
     <div class="rain-overlay" id="rainOverlay"></div>
     <div class="snow-overlay" id="snowOverlay"></div>
     <div class="wind-overlay" id="windOverlay"></div>
-    <div class="character"><img id="previewChar" src="" alt=""></div>
+    <div class="character" id="characterBtn" role="button" aria-label="Tap character for outfit tip"><img id="previewChar" src="" alt=""></div>
     <div class="preview-info">
       <div class="p-label" id="pLabel">--</div>
       <div class="p-temp" id="pTemp">--</div>
@@ -258,7 +265,7 @@
 <script>
 var STATES = [
   {
-    id: 'shiba-hot', label: 'HOT',
+    id: 'shiba-hot', voiceId: 'hot', label: 'HOT',
     temp: '68\u00B0F+ (20\u00B0C+)',
     outfit: 'Red t-shirt + shorts + sunglasses',
     bg: 'assets/backgrounds/bg-sunny.png',
@@ -267,7 +274,7 @@ var STATES = [
     advice: 'Light clothes are perfect!',
   },
   {
-    id: 'shiba-cool', label: 'COOL',
+    id: 'shiba-cool', voiceId: 'cool', label: 'COOL',
     temp: '50-68\u00B0F (10-20\u00B0C)',
     outfit: 'Blue long-sleeve + khaki pants',
     bg: 'assets/backgrounds/bg-sunny.png',
@@ -276,7 +283,7 @@ var STATES = [
     advice: 'Light jacket or hoodie!',
   },
   {
-    id: 'bear-cold', label: 'COLD',
+    id: 'bear-cold', voiceId: 'snowy', label: 'COLD',
     temp: 'Below 50\u00B0F (10\u00B0C)',
     outfit: 'Puffer coat + scarf + earmuffs',
     bg: 'assets/backgrounds/bg-snowy.png',
@@ -285,7 +292,7 @@ var STATES = [
     advice: 'Bundle up! It\'s freezing!',
   },
   {
-    id: 'duck-rainy', label: 'RAINY',
+    id: 'duck-rainy', voiceId: 'rainy', label: 'RAINY',
     temp: 'Any temp + rain',
     outfit: 'Raincoat + red boots + umbrella',
     bg: 'assets/backgrounds/bg-rainy.png',
@@ -535,10 +542,19 @@ speedSlider.addEventListener('input', function() {
   if (activeState) selectState(activeState);
 });
 
+// === Character click → voice comment ===
+document.getElementById('characterBtn').addEventListener('click', function() {
+  if (activeState && typeof CharacterVoice !== 'undefined') {
+    CharacterVoice.play(activeState);
+  }
+});
+
 // === Init ===
 selectSensory('standard');
 selectState(STATES[0]);
 </script>
+
+<script src="js/character-voice.js"></script>
 
 </body>
 </html>

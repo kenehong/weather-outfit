@@ -27,8 +27,8 @@ function extractPlace(address) {
 }
 
 async function initLiveWeather() {
-  // Show default state immediately as fallback
-  selectState(STATES[0]);
+  // Show default state immediately as fallback (no TTS until real weather loads)
+  selectState(STATES[0], true);
 
   var lat = DEFAULT_LOCATION.lat;
   var lon = DEFAULT_LOCATION.lon;
@@ -55,8 +55,8 @@ async function initLiveWeather() {
 
     if (matched) {
       if (typeof TTS !== 'undefined') TTS.reset();
+      liveTemp = Math.round(tempF) + '°F';
       selectState(matched);
-      document.getElementById('pTemp').textContent = Math.round(tempF) + '°F';
     }
   } catch (err) {
     console.error('Weather fetch error:', err);
