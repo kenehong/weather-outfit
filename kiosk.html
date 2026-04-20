@@ -277,10 +277,11 @@
   .p-fav-btn {
     position: absolute; top: 0.4rem; right: 0.4rem;
     background: none; border: none; cursor: pointer;
-    color: var(--gold); padding: 0.3rem; line-height: 0;
-    transition: transform 0.15s;
+    color: rgba(255,255,255,0.45); padding: 0.3rem; line-height: 0;
+    transition: transform 0.15s, color 0.2s;
   }
-  .p-fav-btn:hover { transform: scale(1.15); }
+  .p-fav-btn:hover { transform: scale(1.15); color: rgba(255,255,255,0.75); }
+  .p-fav-btn.favorited, .p-fav-btn.favorited:hover { color: var(--gold); }
   .p-fav-btn svg { display: block; width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.5; }
   .p-fav-btn.favorited svg { fill: currentColor; }
   .preview-info .p-label {
