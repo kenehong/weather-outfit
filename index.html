@@ -79,24 +79,29 @@
   }
 
   /* Favorites list */
-  .fav-list { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.35rem; }
+  .fav-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
   .fav-item {
-    display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.5rem 0.6rem; cursor: pointer;
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.85rem 0.75rem; cursor: pointer;
     border: 1px solid rgba(255,210,80,0.15);
     background: transparent; color: var(--text);
-    font-family: var(--font-body); font-size: 0.95rem;
+    font-family: var(--font-body); font-size: 1.05rem;
     transition: border-color 0.2s, background 0.2s;
-    text-align: left;
+    text-align: left; min-height: 48px;
   }
   .fav-item:hover { border-color: var(--gold-dim); background: rgba(255,210,80,0.04); }
   .fav-item.empty { color: var(--text-dim); font-style: italic; cursor: default; border-style: dashed; }
   .fav-item.empty:hover { border-color: rgba(255,210,80,0.15); background: transparent; }
-  .fav-pin { font-size: 0.9rem; opacity: 0.8; }
+  .fav-item.current {
+    border-color: rgba(255,210,80,0.3);
+    background: rgba(255,210,80,0.03);
+  }
+  .fav-item.current .fav-name { color: var(--gold); }
+  .fav-pin { font-size: 1rem; opacity: 0.85; }
   .fav-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .fav-remove {
     background: none; border: none; color: var(--text-dim);
-    cursor: pointer; font-size: 1rem; padding: 0 0.25rem;
+    cursor: pointer; font-size: 1.1rem; padding: 0.25rem 0.4rem;
     line-height: 1;
   }
   .fav-remove:hover { color: var(--gold); }
@@ -833,14 +838,26 @@ function goToL2() { document.getElementById('panelStack').classList.add('l2'); }
 
     function renderFavorites() {
       while (favList.firstChild) favList.removeChild(favList.firstChild);
+
+      // Fixed: current location (GPS)
+      var current = document.createElement('div');
+      current.className = 'fav-item current';
+      var curPin = document.createElement('span');
+      curPin.className = 'fav-pin';
+      curPin.textContent = '\uD83C\uDFAF';
+      var curName = document.createElement('span');
+      curName.className = 'fav-name';
+      curName.textContent = 'Current Location';
+      current.appendChild(curPin);
+      current.appendChild(curName);
+      current.addEventListener('click', function() {
+        clearOverrideLocation();
+        toggleMenu();
+      });
+      favList.appendChild(current);
+
+      // User pins
       var favs = getFavorites();
-      if (favs.length === 0) {
-        var empty = document.createElement('div');
-        empty.className = 'fav-item empty';
-        empty.textContent = 'Tap \u2606 on a city to save it';
-        favList.appendChild(empty);
-        return;
-      }
       favs.forEach(function(f) {
         var item = document.createElement('div');
         item.className = 'fav-item';
