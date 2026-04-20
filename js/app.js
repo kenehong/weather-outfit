@@ -87,6 +87,13 @@ async function loadWeatherForLocation(lat, lon, displayName) {
     var condition = weatherCodeToCondition(code);
     var stateId = pickState(tempF, condition);
 
+    // Location-local hour (Open-Meteo returns current.time in the requested timezone)
+    if (weatherData.current.time) {
+      var t = String(weatherData.current.time);
+      var hourMatch = t.match(/T(\d{2}):/);
+      if (hourMatch) window.locationHour = parseInt(hourMatch[1], 10);
+    }
+
     var matched = STATES.find(function(s) {
       return s.id === stateId;
     });

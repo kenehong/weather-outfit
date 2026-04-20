@@ -9,7 +9,8 @@ async function fetchWeather(lat, lon) {
     'https://api.open-meteo.com/v1/forecast' +
     '?latitude=' + lat + '&longitude=' + lon +
     '&current=temperature_2m,weather_code' +
-    '&temperature_unit=fahrenheit';
+    '&temperature_unit=fahrenheit' +
+    '&timezone=auto';
 
   var res = await fetch(url);
   if (!res.ok) {

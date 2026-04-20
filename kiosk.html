@@ -549,7 +549,9 @@ function getFrames(state) {
 
 function getBg(state) {
   if (state.bg !== 'assets/backgrounds/bg-sunny.png') return state.bg;
-  var hour = new Date().getHours();
+  var hour = (typeof window.locationHour === 'number')
+    ? window.locationHour
+    : new Date().getHours();
   if (hour >= 20 || hour < 5) return 'assets/backgrounds/bg-night.png';
   if (hour >= 17) return 'assets/backgrounds/bg-sunset.png';
   return state.bg;
