@@ -275,13 +275,14 @@
     padding-right: 2.5rem;
   }
   .p-fav-btn {
-    position: absolute; top: 0.5rem; right: 0.5rem;
+    position: absolute; top: 0.4rem; right: 0.4rem;
     background: none; border: none; cursor: pointer;
-    color: var(--gold); font-size: 1.4rem; line-height: 1;
-    padding: 0.25rem; transition: transform 0.15s;
+    color: var(--gold); padding: 0.3rem; line-height: 0;
+    transition: transform 0.15s;
   }
   .p-fav-btn:hover { transform: scale(1.15); }
-  .p-fav-btn.favorited { color: var(--gold); }
+  .p-fav-btn svg { display: block; width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+  .p-fav-btn.favorited svg { fill: currentColor; }
   .preview-info .p-label {
     font-family: var(--font-display); font-size: 0.5rem;
     color: var(--gold); margin-bottom: 0.25rem;
@@ -408,7 +409,11 @@
     <div class="wind-overlay" id="windOverlay"></div>
     <div class="character" id="characterBtn" role="button" aria-label="Tap character for outfit tip"><img id="previewChar" src="" alt=""></div>
     <div class="preview-info">
-      <button class="p-fav-btn" id="favToggle" aria-label="Save location">&#x2606;</button>
+      <button class="p-fav-btn" id="favToggle" aria-label="Save location">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.1 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.5 12 2"></polygon>
+        </svg>
+      </button>
       <div class="p-label" id="pLabel">--</div>
       <div class="p-temp" id="pTemp">--</div>
       <div class="p-advice" id="pAdvice">--</div>
@@ -876,18 +881,8 @@ function goToL2() {
 
     function updateStar() {
       var loc = window.currentLocation;
-      if (!loc || loc.lat == null) {
-        favBtn.textContent = '\u2606';
-        favBtn.classList.remove('favorited');
-        return;
-      }
-      if (isFavorite(loc.lat, loc.lon)) {
-        favBtn.textContent = '\u2605';
-        favBtn.classList.add('favorited');
-      } else {
-        favBtn.textContent = '\u2606';
-        favBtn.classList.remove('favorited');
-      }
+      var fav = loc && loc.lat != null && isFavorite(loc.lat, loc.lon);
+      favBtn.classList.toggle('favorited', !!fav);
     }
 
     favBtn.addEventListener('click', function() {
