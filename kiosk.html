@@ -379,11 +379,12 @@
       </div>
 
       <div class="sound-section">
-        <div class="section-label">VOLUME</div>
-        <div class="volume-row">
-          <span class="vol-icon">&#x1f509;</span>
-          <input type="range" id="volumeSlider" min="0" max="100" value="80" step="5">
-          <span class="vol-val" id="volumeVal">80%</span>
+        <div class="section-label">VOICE</div>
+        <div class="voice-row">
+          <span class="voice-label" id="voiceLabel">Sound On</span>
+          <button class="toggle-switch on" id="ttsToggle" onclick="toggleTTS()">
+            <span class="toggle-knob"></span>
+          </button>
         </div>
       </div>
 
@@ -649,23 +650,24 @@ document.querySelectorAll('.type-btn').forEach(function(b) {
 });
 selectSensory(activeSensory);
 
-// === Volume control ===
-var volumeSlider = document.getElementById('volumeSlider');
-var volumeVal = document.getElementById('volumeVal');
-var savedVolume = localStorage.getItem('tts-volume');
-if (savedVolume !== null) {
-  volumeSlider.value = savedVolume;
-  volumeVal.textContent = savedVolume + '%';
+// === Voice toggle ===
+function toggleTTS() {
+  var on = TTS.toggle();
+  var toggle = document.getElementById('ttsToggle');
+  toggle.classList.toggle('on', on);
+  document.getElementById('voiceLabel').textContent = on ? 'Sound On' : 'Sound Off';
+  document.getElementById('voiceLabel').classList.toggle('muted', !on);
 }
-volumeSlider.addEventListener('input', function() {
-  var vol = parseInt(volumeSlider.value);
-  volumeVal.textContent = vol + '%';
-  localStorage.setItem('tts-volume', vol);
-  if (typeof CharacterVoice !== 'undefined') CharacterVoice.setVolume(vol / 100);
-});
-if (typeof CharacterVoice !== 'undefined') {
-  CharacterVoice.setVolume(parseInt(localStorage.getItem('tts-volume') || '80') / 100);
-}
+
+// Init voice toggle state
+(function() {
+  if (typeof TTS !== 'undefined') {
+    var on = TTS.isEnabled();
+    document.getElementById('ttsToggle').classList.toggle('on', on);
+    document.getElementById('voiceLabel').textContent = on ? 'Sound On' : 'Sound Off';
+    document.getElementById('voiceLabel').classList.toggle('muted', !on);
+  }
+})();
 
 // === Character type toggle ===
 function switchCharType(type) {

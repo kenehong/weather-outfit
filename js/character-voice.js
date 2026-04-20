@@ -18,7 +18,7 @@ var CharacterVoice = (function() {
 
   function play(state) {
     if (!state) return;
-    if (masterVolume <= 0) return;
+    if (typeof TTS !== 'undefined' && !TTS.isEnabled()) return;
     if (current) { current.pause(); current.currentTime = 0; }
     var id = state.voiceId || state.id;
     current = new Audio(pick(id));
