@@ -17,6 +17,23 @@ function pickState(tempF, condition) {
   return 'hot';
 }
 
+function getTempUnit() { return localStorage.getItem('temp-unit') || 'F'; }
+
+function formatTemp(tempF) {
+  if (tempF == null) return '';
+  if (getTempUnit() === 'C') return Math.round((tempF - 32) * 5 / 9) + '\u00B0C';
+  return Math.round(tempF) + '\u00B0F';
+}
+
+function setTempUnit(unit) {
+  localStorage.setItem('temp-unit', unit);
+  if (typeof window.liveTempF === 'number') {
+    liveTemp = formatTemp(window.liveTempF);
+    var el = document.getElementById('pTemp');
+    if (el) el.textContent = liveTemp;
+  }
+}
+
 function extractPlace(address) {
   var city = address.city ||
     address.town ||
@@ -100,7 +117,8 @@ async function loadWeatherForLocation(lat, lon, displayName) {
 
     if (matched) {
       if (typeof TTS !== 'undefined') TTS.reset();
-      liveTemp = Math.round(tempF) + '°F';
+      window.liveTempF = tempF;
+      liveTemp = formatTemp(tempF);
       selectState(matched);
     }
   } catch (err) {

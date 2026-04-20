@@ -374,6 +374,14 @@
         </div>
       </div>
 
+      <div class="char-type-section">
+        <div class="section-label">TEMP UNIT</div>
+        <div class="char-type-toggle">
+          <button class="type-btn" data-unit="F" onclick="switchTempUnit('F')">&deg;F</button>
+          <button class="type-btn" data-unit="C" onclick="switchTempUnit('C')">&deg;C</button>
+        </div>
+      </div>
+
       <div class="sensory-section">
         <div class="section-label">SENSORY MODE</div>
         <div class="sensory-modes" id="sensoryModes"></div>
@@ -650,8 +658,12 @@ speedSlider.addEventListener('input', function() {
 });
 
 // === Init ===
-document.querySelectorAll('.type-btn').forEach(function(b) {
+document.querySelectorAll('.type-btn[data-type]').forEach(function(b) {
   b.classList.toggle('active', b.dataset.type === activeCharType);
+});
+var _initUnit = localStorage.getItem('temp-unit') || 'F';
+document.querySelectorAll('.type-btn[data-unit]').forEach(function(b) {
+  b.classList.toggle('active', b.dataset.unit === _initUnit);
 });
 selectSensory(activeSensory);
 
@@ -674,12 +686,20 @@ function toggleTTS() {
   }
 })();
 
+// === Temperature unit toggle ===
+function switchTempUnit(unit) {
+  setTempUnit(unit);
+  document.querySelectorAll('.type-btn[data-unit]').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.unit === unit);
+  });
+}
+
 // === Character type toggle ===
 function switchCharType(type) {
   activeCharType = type;
   localStorage.setItem('char-type', type);
 
-  document.querySelectorAll('.type-btn').forEach(function(b) {
+  document.querySelectorAll('.type-btn[data-type]').forEach(function(b) {
     b.classList.toggle('active', b.dataset.type === type);
   });
 
