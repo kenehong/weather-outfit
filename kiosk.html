@@ -365,10 +365,6 @@
 
     <!-- L2: Settings detail -->
     <div class="panel-level">
-      <button class="back-btn" onclick="goToL1()">
-        <span class="chev">&#x2039;</span><span>BACK</span>
-      </button>
-
       <div class="char-type-section">
         <div class="section-label">CHARACTER</div>
         <div class="char-type-toggle">
@@ -383,14 +379,8 @@
       </div>
 
       <div class="sound-section">
-        <div class="section-label">VOICE</div>
-        <div class="voice-row">
-          <span class="voice-label" id="voiceLabel">Sound On</span>
-          <button class="toggle-switch on" id="ttsToggle" onclick="toggleTTS()">
-            <span class="toggle-knob"></span>
-          </button>
-        </div>
-        <div class="volume-row" id="volumeRow">
+        <div class="section-label">VOLUME</div>
+        <div class="volume-row">
           <span class="vol-icon">&#x1f509;</span>
           <input type="range" id="volumeSlider" min="0" max="100" value="80" step="5">
           <span class="vol-val" id="volumeVal">80%</span>
@@ -663,17 +653,6 @@ document.querySelectorAll('.type-btn').forEach(function(b) {
 });
 selectSensory(activeSensory);
 
-// === TTS toggle ===
-function toggleTTS() {
-  var on = TTS.toggle();
-  var toggle = document.getElementById('ttsToggle');
-  toggle.classList.toggle('on', on);
-  document.getElementById('voiceLabel').textContent = on ? 'Sound On' : 'Sound Off';
-  document.getElementById('voiceLabel').classList.toggle('muted', !on);
-  document.getElementById('volumeRow').style.opacity = on ? '1' : '0.35';
-  document.getElementById('volumeSlider').disabled = !on;
-}
-
 // === Volume control ===
 var volumeSlider = document.getElementById('volumeSlider');
 var volumeVal = document.getElementById('volumeVal');
@@ -686,25 +665,11 @@ volumeSlider.addEventListener('input', function() {
   var vol = parseInt(volumeSlider.value);
   volumeVal.textContent = vol + '%';
   localStorage.setItem('tts-volume', vol);
-  if (typeof TTS !== 'undefined' && TTS.setVolume) TTS.setVolume(vol / 100);
   if (typeof CharacterVoice !== 'undefined') CharacterVoice.setVolume(vol / 100);
 });
-
-// Init TTS button state
-(function() {
-  if (typeof TTS !== 'undefined') {
-    var on = TTS.isEnabled();
-    document.getElementById('ttsToggle').classList.toggle('on', on);
-    document.getElementById('voiceLabel').textContent = on ? 'Sound On' : 'Sound Off';
-    document.getElementById('voiceLabel').classList.toggle('muted', !on);
-    document.getElementById('volumeRow').style.opacity = on ? '1' : '0.35';
-    document.getElementById('volumeSlider').disabled = !on;
-    if (TTS.setVolume) {
-      var vol = parseInt(localStorage.getItem('tts-volume') || '80');
-      TTS.setVolume(vol / 100);
-    }
-  }
-})();
+if (typeof CharacterVoice !== 'undefined') {
+  CharacterVoice.setVolume(parseInt(localStorage.getItem('tts-volume') || '80') / 100);
+}
 
 // === Character type toggle ===
 function switchCharType(type) {
@@ -728,20 +693,36 @@ document.getElementById('characterBtn').addEventListener('click', function() {
 // === Menu toggle ===
 function toggleMenu() {
   var panel = document.getElementById('settingsPanel');
+  var stack = document.getElementById('panelStack');
   var overlay = document.getElementById('settingsOverlay');
   var btn = document.getElementById('menuToggle');
   var isOpen = panel.classList.contains('open');
+
+  // While menu is open on L2, the top button acts as "back to L1"
+  if (isOpen && stack.classList.contains('l2')) {
+    goToL1();
+    return;
+  }
+
   panel.classList.toggle('open');
   overlay.classList.toggle('open');
   btn.classList.toggle('open');
   btn.textContent = isOpen ? '\u2630' : '\u2715';
-  // Reset to L1 whenever menu closes
   if (isOpen) goToL1();
 }
 
 // === L1/L2 panel navigation ===
-function goToL1() { document.getElementById('panelStack').classList.remove('l2'); }
-function goToL2() { document.getElementById('panelStack').classList.add('l2'); }
+function goToL1() {
+  document.getElementById('panelStack').classList.remove('l2');
+  var btn = document.getElementById('menuToggle');
+  if (document.getElementById('settingsPanel').classList.contains('open')) {
+    btn.textContent = '\u2715'; // \u2715 when menu open at L1
+  }
+}
+function goToL2() {
+  document.getElementById('panelStack').classList.add('l2');
+  document.getElementById('menuToggle').textContent = '\u2190'; // \u2190 back arrow
+}
 </script>
 
 <script src="js/tts.js"></script>
