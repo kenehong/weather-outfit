@@ -298,39 +298,32 @@
     opacity: 0.85;
   }
 
-  /* In-card location search */
-  .preview-info { min-width: 240px; }
-  .p-search-wrap {
-    position: relative;
-    margin-top: 0.6rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(255,210,80,0.15);
-  }
-  .p-search-input {
-    width: 100%; padding: 0.4rem 0.5rem;
-    background: rgba(0,0,0,0.35); border: 1px solid rgba(255,210,80,0.25);
-    color: var(--text); font-family: var(--font-body); font-size: 0.9rem;
+  /* In-menu location search */
+  .menu-search-wrap { position: relative; margin-top: 0.5rem; }
+  .menu-search-input {
+    width: 100%; padding: 0.6rem 0.7rem;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,210,80,0.2);
+    color: var(--text); font-family: var(--font-body); font-size: 1rem;
     outline: none; border-radius: 4px;
   }
-  .p-search-input:focus { border-color: var(--border-active); }
-  .p-search-input::placeholder { color: rgba(255,210,80,0.4); }
-  .p-search-results {
-    position: absolute; left: 0; right: 0; top: calc(100% - 0.3rem); margin-top: 4px;
-    max-height: 40vh; overflow-y: auto; z-index: 20;
-    background: rgba(10,10,30,0.95); backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,210,80,0.25); border-radius: 4px;
-    display: none;
+  .menu-search-input:focus { border-color: var(--border-active); }
+  .menu-search-input::placeholder { color: rgba(255,210,80,0.4); }
+  .menu-search-results {
+    position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
+    max-height: 50vh; overflow-y: auto; z-index: 20;
+    background: var(--navy); border: 1px solid rgba(255,210,80,0.25);
+    border-radius: 4px; display: none;
   }
-  .p-search-results.open { display: block; }
-  .p-search-results .loc-item {
-    padding: 0.4rem 0.55rem; cursor: pointer;
+  .menu-search-results.open { display: block; }
+  .menu-search-results .loc-item {
+    padding: 0.6rem 0.7rem; cursor: pointer;
     border-bottom: 1px solid rgba(255,210,80,0.1);
-    font-size: 0.9rem; color: var(--text);
+    font-size: 0.95rem; color: var(--text);
   }
-  .p-search-results .loc-item:last-child { border-bottom: none; }
-  .p-search-results .loc-item:hover { background: rgba(255,210,80,0.1); }
-  .p-search-results .loc-item .loc-region { color: var(--gold-dim); font-size: 0.8rem; margin-left: 0.25rem; }
-  .p-search-results .loc-item.use-gps {
+  .menu-search-results .loc-item:last-child { border-bottom: none; }
+  .menu-search-results .loc-item:hover { background: rgba(255,210,80,0.1); }
+  .menu-search-results .loc-item .loc-region { color: var(--gold-dim); font-size: 0.85rem; margin-left: 0.25rem; }
+  .menu-search-results .loc-item.use-gps {
     color: var(--gold); font-weight: 500;
     border-bottom-color: rgba(255,210,80,0.25);
   }
@@ -354,6 +347,13 @@
 
     <!-- L1: My Locations + Settings entry -->
     <div class="panel-level">
+      <div>
+        <div class="section-label">SEARCH</div>
+        <div class="menu-search-wrap">
+          <input type="text" class="menu-search-input" id="locSearchInput" placeholder="Search city..." autocomplete="off">
+          <div class="menu-search-results" id="locResults"></div>
+        </div>
+      </div>
       <div>
         <div class="section-label">MY LOCATIONS</div>
         <div class="fav-list" id="favList"></div>
@@ -412,10 +412,6 @@
       <div class="p-temp" id="pTemp">--</div>
       <div class="p-advice" id="pAdvice">--</div>
       <div class="p-location" id="locationText"></div>
-      <div class="p-search-wrap">
-        <input type="text" class="p-search-input" id="locSearchInput" placeholder="Search city..." autocomplete="off">
-        <div class="p-search-results" id="locResults"></div>
-      </div>
     </div>
   </div>
 </div>
@@ -750,6 +746,7 @@ function goToL2() {
         clearOverrideLocation();
         input.value = '';
         clearResults();
+        toggleMenu();
       });
       return item;
     }
@@ -797,6 +794,7 @@ function goToL2() {
               setOverrideLocation(r.latitude, r.longitude, displayName);
               input.value = '';
               clearResults();
+              toggleMenu();
             });
 
             results.appendChild(item);
