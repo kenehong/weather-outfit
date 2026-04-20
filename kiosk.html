@@ -133,7 +133,8 @@
     display: flex; gap: 0.35rem; margin-top: 0.35rem;
   }
   .type-btn {
-    flex: 1; padding: 0.4rem 0.5rem; cursor: pointer;
+    flex: 1; padding: 0.85rem 0.5rem; cursor: pointer;
+    min-height: 48px;
     border: 2px solid rgba(255,210,80,0.15);
     background: transparent; color: var(--text-dim);
     font-family: var(--font-display); font-size: 0.3rem;
@@ -160,11 +161,12 @@
     display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.35rem;
   }
   .sensory-btn {
-    display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.4rem 0.5rem; cursor: pointer;
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.7rem 0.75rem; cursor: pointer;
+    min-height: 48px;
     border: 2px solid rgba(255,210,80,0.15);
     background: transparent; color: var(--text); font-family: var(--font-body);
-    font-size: 0.95rem; text-align: left; transition: border-color 0.2s;
+    font-size: 1rem; text-align: left; transition: border-color 0.2s;
   }
   .sensory-btn:hover { border-color: var(--gold-dim); }
   .sensory-btn.active { border-color: var(--border-active); background: rgba(255,210,80,0.06); }
@@ -180,7 +182,9 @@
     padding-top: 0.5rem; border-top: 1px solid var(--border);
   }
   .voice-row {
-    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem;
+    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;
+    min-height: 48px; padding: 0.5rem 0.6rem;
+    border: 1px solid rgba(255,210,80,0.15);
   }
   .voice-label { font-size: 1rem; color: var(--text); flex: 1; }
   .voice-label.muted { opacity: 0.5; }
@@ -212,7 +216,9 @@
     padding-top: 0.5rem; border-top: 1px solid var(--border);
   }
   .speed-row {
-    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem;
+    display: flex; align-items: center; gap: 0.6rem; margin-top: 0.5rem;
+    min-height: 48px; padding: 0.5rem 0.5rem;
+    border: 1px solid rgba(255,210,80,0.15);
   }
   .speed-row input[type="range"] { flex: 1; accent-color: var(--gold); }
   .speed-val { font-size: 0.9rem; color: var(--gold); min-width: 40px; }
