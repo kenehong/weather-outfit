@@ -56,49 +56,71 @@
   .settings-panel {
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
     width: 280px;
-    padding: calc(3.5rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
-    overflow-y: auto;
+    padding-top: calc(3.5rem + env(safe-area-inset-top));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    overflow: hidden;
     border-right: 1px solid var(--border);
     background: var(--navy);
-    display: flex; flex-direction: column; gap: 0.75rem;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .settings-panel.open { transform: translateX(0); }
 
-  /* Location search */
-  .loc-section { padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); position: relative; }
-  .loc-search-wrap { position: relative; margin-top: 0.35rem; }
-  .loc-search-input {
-    width: 100%; padding: 0.5rem 0.6rem;
-    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,210,80,0.2);
-    color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
-    outline: none; border-radius: 4px;
+  /* L1/L2 slide stack */
+  .panel-stack {
+    display: flex; width: 200%; height: 100%;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .loc-search-input:focus { border-color: var(--border-active); }
-  .loc-search-input::placeholder { color: rgba(255,210,80,0.3); }
-  .loc-results {
-    position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px;
-    max-height: 50vh; overflow-y: auto; z-index: 60;
-    background: var(--navy); border: 1px solid rgba(255,210,80,0.2);
-    border-radius: 4px; display: none;
+  .panel-stack.l2 { transform: translateX(-50%); }
+  .panel-level {
+    width: 50%; flex-shrink: 0; overflow-y: auto;
+    padding: 0 1rem;
+    display: flex; flex-direction: column; gap: 0.75rem;
   }
-  .loc-results.open { display: block; }
-  .loc-item {
+
+  /* Favorites list */
+  .fav-list { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.35rem; }
+  .fav-item {
+    display: flex; align-items: center; gap: 0.5rem;
     padding: 0.5rem 0.6rem; cursor: pointer;
-    border-bottom: 1px solid rgba(255,210,80,0.08);
-    font-size: 0.95rem; color: var(--text);
+    border: 1px solid rgba(255,210,80,0.15);
+    background: transparent; color: var(--text);
+    font-family: var(--font-body); font-size: 0.95rem;
+    transition: border-color 0.2s, background 0.2s;
+    text-align: left;
   }
-  .loc-item:last-child { border-bottom: none; }
-  .loc-item:hover { background: rgba(255,210,80,0.08); }
-  .loc-item .loc-region { color: var(--gold-dim); font-size: 0.85rem; margin-left: 0.25rem; }
-  .loc-reset {
-    margin-top: 0.35rem; background: none; border: none;
-    color: var(--gold-dim); cursor: pointer;
-    font-family: var(--font-body); font-size: 0.85rem; padding: 0;
-    text-decoration: underline;
+  .fav-item:hover { border-color: var(--gold-dim); background: rgba(255,210,80,0.04); }
+  .fav-item.empty { color: var(--text-dim); font-style: italic; cursor: default; border-style: dashed; }
+  .fav-item.empty:hover { border-color: rgba(255,210,80,0.15); background: transparent; }
+  .fav-pin { font-size: 0.9rem; opacity: 0.8; }
+  .fav-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fav-remove {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 1rem; padding: 0 0.25rem;
+    line-height: 1;
   }
-  .loc-reset:hover { color: var(--gold); }
+  .fav-remove:hover { color: var(--gold); }
+
+  /* Nav buttons */
+  .nav-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6rem 0.75rem; cursor: pointer;
+    border: 2px solid rgba(255,210,80,0.2);
+    background: transparent; color: var(--gold);
+    font-family: var(--font-display); font-size: 0.35rem;
+    letter-spacing: 0.08em; margin-top: auto;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .nav-btn:hover { border-color: var(--border-active); background: rgba(255,210,80,0.06); }
+  .nav-btn .chev { font-size: 0.8rem; }
+  .back-btn {
+    display: flex; align-items: center; gap: 0.4rem;
+    background: none; border: none; cursor: pointer;
+    color: var(--gold-dim); font-family: var(--font-display);
+    font-size: 0.35rem; letter-spacing: 0.08em;
+    padding: 0; margin-bottom: 0.25rem;
+  }
+  .back-btn:hover { color: var(--gold); }
 
   /* Character type toggle */
   .char-type-section { padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
@@ -245,7 +267,16 @@
     background: rgba(10,10,30,0.6); backdrop-filter: blur(20px);
     border: 2px solid rgba(255,210,80,0.3);
     padding: 0.75rem 1rem; z-index: 10;
+    padding-right: 2.5rem;
   }
+  .p-fav-btn {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    background: none; border: none; cursor: pointer;
+    color: var(--gold); font-size: 1.4rem; line-height: 1;
+    padding: 0.25rem; transition: transform 0.15s;
+  }
+  .p-fav-btn:hover { transform: scale(1.15); }
+  .p-fav-btn.favorited { color: var(--gold); }
   .preview-info .p-label {
     font-family: var(--font-display); font-size: 0.5rem;
     color: var(--gold); margin-bottom: 0.25rem;
@@ -260,6 +291,43 @@
     margin-top: 6px;
     font-size: 14px;
     opacity: 0.85;
+  }
+
+  /* In-card location search */
+  .preview-info { min-width: 240px; }
+  .p-search-wrap {
+    position: relative;
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255,210,80,0.15);
+  }
+  .p-search-input {
+    width: 100%; padding: 0.4rem 0.5rem;
+    background: rgba(0,0,0,0.35); border: 1px solid rgba(255,210,80,0.25);
+    color: var(--text); font-family: var(--font-body); font-size: 0.9rem;
+    outline: none; border-radius: 4px;
+  }
+  .p-search-input:focus { border-color: var(--border-active); }
+  .p-search-input::placeholder { color: rgba(255,210,80,0.4); }
+  .p-search-results {
+    position: absolute; left: 0; right: 0; top: calc(100% - 0.3rem); margin-top: 4px;
+    max-height: 40vh; overflow-y: auto; z-index: 20;
+    background: rgba(10,10,30,0.95); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,210,80,0.25); border-radius: 4px;
+    display: none;
+  }
+  .p-search-results.open { display: block; }
+  .p-search-results .loc-item {
+    padding: 0.4rem 0.55rem; cursor: pointer;
+    border-bottom: 1px solid rgba(255,210,80,0.1);
+    font-size: 0.9rem; color: var(--text);
+  }
+  .p-search-results .loc-item:last-child { border-bottom: none; }
+  .p-search-results .loc-item:hover { background: rgba(255,210,80,0.1); }
+  .p-search-results .loc-item .loc-region { color: var(--gold-dim); font-size: 0.8rem; margin-left: 0.25rem; }
+  .p-search-results .loc-item.use-gps {
+    color: var(--gold); font-weight: 500;
+    border-bottom-color: rgba(255,210,80,0.25);
   }
 
   /* Sensory visual states */
@@ -277,54 +345,62 @@
 <div class="settings-overlay" id="settingsOverlay" onclick="toggleMenu()"></div>
 
 <div class="settings-panel" id="settingsPanel">
-  <!-- Location Search -->
-  <div class="loc-section">
-    <div class="section-label">LOCATION</div>
-    <div class="loc-search-wrap">
-      <input type="text" class="loc-search-input" id="locSearchInput" placeholder="Search city..." autocomplete="off">
-      <div class="loc-results" id="locResults"></div>
-    </div>
-    <button class="loc-reset" id="locReset" onclick="clearOverrideLocation()">Use my location</button>
-  </div>
+  <div class="panel-stack" id="panelStack">
 
-  <!-- Character Type Toggle -->
-  <div class="char-type-section">
-    <div class="section-label">CHARACTER</div>
-    <div class="char-type-toggle">
-      <button class="type-btn active" data-type="animal" onclick="switchCharType('animal')">ANIMAL</button>
-      <button class="type-btn" data-type="human" onclick="switchCharType('human')">HUMAN</button>
-    </div>
-  </div>
-
-  <!-- Sensory Modes -->
-  <div class="sensory-section">
-    <div class="section-label">SENSORY MODE</div>
-    <div class="sensory-modes" id="sensoryModes"></div>
-  </div>
-
-  <!-- Voice Toggle + Volume -->
-  <div class="sound-section">
-    <div class="section-label">VOICE</div>
-    <div class="voice-row">
-      <span class="voice-label" id="voiceLabel">Sound On</span>
-      <button class="toggle-switch on" id="ttsToggle" onclick="toggleTTS()">
-        <span class="toggle-knob"></span>
+    <!-- L1: My Locations + Settings entry -->
+    <div class="panel-level">
+      <div>
+        <div class="section-label">MY LOCATIONS</div>
+        <div class="fav-list" id="favList"></div>
+      </div>
+      <button class="nav-btn" onclick="goToL2()">
+        <span>SETTINGS</span><span class="chev">&#x203A;</span>
       </button>
     </div>
-    <div class="volume-row" id="volumeRow">
-      <span class="vol-icon">&#x1f509;</span>
-      <input type="range" id="volumeSlider" min="0" max="100" value="80" step="5">
-      <span class="vol-val" id="volumeVal">80%</span>
-    </div>
-  </div>
 
-  <!-- Walk Speed -->
-  <div class="speed-section">
-    <div class="section-label">WALK SPEED</div>
-    <div class="speed-row">
-      <input type="range" id="speedSlider" min="150" max="800" value="600" step="50">
-      <span class="speed-val" id="speedVal">600ms</span>
+    <!-- L2: Settings detail -->
+    <div class="panel-level">
+      <button class="back-btn" onclick="goToL1()">
+        <span class="chev">&#x2039;</span><span>BACK</span>
+      </button>
+
+      <div class="char-type-section">
+        <div class="section-label">CHARACTER</div>
+        <div class="char-type-toggle">
+          <button class="type-btn" data-type="animal" onclick="switchCharType('animal')">ANIMAL</button>
+          <button class="type-btn active" data-type="human" onclick="switchCharType('human')">HUMAN</button>
+        </div>
+      </div>
+
+      <div class="sensory-section">
+        <div class="section-label">SENSORY MODE</div>
+        <div class="sensory-modes" id="sensoryModes"></div>
+      </div>
+
+      <div class="sound-section">
+        <div class="section-label">VOICE</div>
+        <div class="voice-row">
+          <span class="voice-label" id="voiceLabel">Sound On</span>
+          <button class="toggle-switch on" id="ttsToggle" onclick="toggleTTS()">
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+        <div class="volume-row" id="volumeRow">
+          <span class="vol-icon">&#x1f509;</span>
+          <input type="range" id="volumeSlider" min="0" max="100" value="80" step="5">
+          <span class="vol-val" id="volumeVal">80%</span>
+        </div>
+      </div>
+
+      <div class="speed-section">
+        <div class="section-label">WALK SPEED</div>
+        <div class="speed-row">
+          <input type="range" id="speedSlider" min="150" max="800" value="600" step="50">
+          <span class="speed-val" id="speedVal">600ms</span>
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -336,10 +412,15 @@
     <div class="wind-overlay" id="windOverlay"></div>
     <div class="character" id="characterBtn" role="button" aria-label="Tap character for outfit tip"><img id="previewChar" src="" alt=""></div>
     <div class="preview-info">
+      <button class="p-fav-btn" id="favToggle" aria-label="Save location">&#x2606;</button>
       <div class="p-label" id="pLabel">--</div>
       <div class="p-temp" id="pTemp">--</div>
       <div class="p-advice" id="pAdvice">--</div>
       <div class="p-location" id="locationText"></div>
+      <div class="p-search-wrap">
+        <input type="text" class="p-search-input" id="locSearchInput" placeholder="Search city..." autocomplete="off">
+        <div class="p-search-results" id="locResults"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -647,7 +728,13 @@ function toggleMenu() {
   overlay.classList.toggle('open');
   btn.classList.toggle('open');
   btn.textContent = isOpen ? '\u2630' : '\u2715';
+  // Reset to L1 whenever menu closes
+  if (isOpen) goToL1();
 }
+
+// === L1/L2 panel navigation ===
+function goToL1() { document.getElementById('panelStack').classList.remove('l2'); }
+function goToL2() { document.getElementById('panelStack').classList.add('l2'); }
 </script>
 
 <script src="js/tts.js"></script>
@@ -667,8 +754,21 @@ function toggleMenu() {
       results.classList.remove('open');
     }
 
+    function buildUseGpsItem() {
+      var item = document.createElement('div');
+      item.className = 'loc-item use-gps';
+      item.textContent = '\uD83D\uDCCD  Use my location';
+      item.addEventListener('click', function() {
+        clearOverrideLocation();
+        input.value = '';
+        clearResults();
+      });
+      return item;
+    }
+
     function showMessage(text) {
       clearResults();
+      results.appendChild(buildUseGpsItem());
       var item = document.createElement('div');
       item.className = 'loc-item';
       item.textContent = text;
@@ -689,6 +789,7 @@ function toggleMenu() {
             return;
           }
           clearResults();
+          results.appendChild(buildUseGpsItem());
           data.results.forEach(function(r) {
             var item = document.createElement('div');
             item.className = 'loc-item';
@@ -723,6 +824,90 @@ function toggleMenu() {
     document.addEventListener('click', function(e) {
       if (!results.contains(e.target) && e.target !== input) clearResults();
     });
+  })();
+
+  // === Favorites list + star toggle ===
+  (function() {
+    var favList = document.getElementById('favList');
+    var favBtn = document.getElementById('favToggle');
+
+    function renderFavorites() {
+      while (favList.firstChild) favList.removeChild(favList.firstChild);
+      var favs = getFavorites();
+      if (favs.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'fav-item empty';
+        empty.textContent = 'Tap \u2606 on a city to save it';
+        favList.appendChild(empty);
+        return;
+      }
+      favs.forEach(function(f) {
+        var item = document.createElement('div');
+        item.className = 'fav-item';
+
+        var pin = document.createElement('span');
+        pin.className = 'fav-pin';
+        pin.textContent = '\uD83D\uDCCD';
+
+        var name = document.createElement('span');
+        name.className = 'fav-name';
+        name.textContent = f.name;
+
+        var remove = document.createElement('button');
+        remove.className = 'fav-remove';
+        remove.setAttribute('aria-label', 'Remove');
+        remove.textContent = '\u2715';
+        remove.addEventListener('click', function(e) {
+          e.stopPropagation();
+          removeFavorite(f.lat, f.lon);
+        });
+
+        item.addEventListener('click', function() {
+          setOverrideLocation(f.lat, f.lon, f.name);
+          toggleMenu();
+        });
+
+        item.appendChild(pin);
+        item.appendChild(name);
+        item.appendChild(remove);
+        favList.appendChild(item);
+      });
+    }
+
+    function updateStar() {
+      var loc = window.currentLocation;
+      if (!loc || loc.lat == null) {
+        favBtn.textContent = '\u2606';
+        favBtn.classList.remove('favorited');
+        return;
+      }
+      if (isFavorite(loc.lat, loc.lon)) {
+        favBtn.textContent = '\u2605';
+        favBtn.classList.add('favorited');
+      } else {
+        favBtn.textContent = '\u2606';
+        favBtn.classList.remove('favorited');
+      }
+    }
+
+    favBtn.addEventListener('click', function() {
+      var loc = window.currentLocation;
+      if (!loc || loc.lat == null) return;
+      if (isFavorite(loc.lat, loc.lon)) {
+        removeFavorite(loc.lat, loc.lon);
+      } else {
+        addFavorite(loc.lat, loc.lon, loc.name || '');
+      }
+    });
+
+    window.addEventListener('favoritesChanged', function() {
+      renderFavorites();
+      updateStar();
+    });
+    window.addEventListener('currentLocationChanged', updateStar);
+
+    renderFavorites();
+    updateStar();
   })();
 
   initLiveWeather();

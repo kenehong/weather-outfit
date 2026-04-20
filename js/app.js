@@ -31,7 +31,52 @@ function extractPlace(address) {
   return city || region || '';
 }
 
+// ===== Favorites =====
+var SEED_FAVORITES = [
+  { lat: 25.7617, lon: -80.1918, name: 'Miami, Florida' },
+  { lat: 64.1466, lon: -21.9426, name: 'Reykjavik, Iceland' },
+  { lat: 34.0522, lon: -118.2437, name: 'Los Angeles, California' },
+];
+
+function sameCoord(a, b) { return Math.abs(a - b) < 0.01; }
+
+function getFavorites() {
+  var raw = localStorage.getItem('favorite-cities');
+  if (raw === null) {
+    localStorage.setItem('favorite-cities', JSON.stringify(SEED_FAVORITES));
+    return SEED_FAVORITES.slice();
+  }
+  try { return JSON.parse(raw) || []; } catch (e) { return []; }
+}
+
+function isFavorite(lat, lon) {
+  return getFavorites().some(function(f) {
+    return sameCoord(f.lat, lat) && sameCoord(f.lon, lon);
+  });
+}
+
+function addFavorite(lat, lon, name) {
+  var favs = getFavorites();
+  if (favs.some(function(f) { return sameCoord(f.lat, lat) && sameCoord(f.lon, lon); })) return;
+  favs.push({ lat: lat, lon: lon, name: name || (lat.toFixed(2) + ', ' + lon.toFixed(2)) });
+  localStorage.setItem('favorite-cities', JSON.stringify(favs));
+  dispatchFavoritesChanged();
+}
+
+function removeFavorite(lat, lon) {
+  var favs = getFavorites().filter(function(f) {
+    return !(sameCoord(f.lat, lat) && sameCoord(f.lon, lon));
+  });
+  localStorage.setItem('favorite-cities', JSON.stringify(favs));
+  dispatchFavoritesChanged();
+}
+
+function dispatchFavoritesChanged() {
+  window.dispatchEvent(new Event('favoritesChanged'));
+}
+
 async function loadWeatherForLocation(lat, lon, displayName) {
+  window.currentLocation = { lat: lat, lon: lon, name: displayName || '' };
   var locationEl = document.getElementById('locationText');
 
   // Fetch weather
@@ -59,17 +104,22 @@ async function loadWeatherForLocation(lat, lon, displayName) {
   if (!locationEl) return;
   if (displayName) {
     locationEl.textContent = displayName;
+    window.dispatchEvent(new Event('currentLocationChanged'));
     return;
   }
   try {
     var locationData = await fetchLocationName(lat, lon);
     var address = locationData.address || {};
     var place = extractPlace(address);
-    locationEl.textContent = place || (lat.toFixed(2) + ', ' + lon.toFixed(2));
+    var label = place || (lat.toFixed(2) + ', ' + lon.toFixed(2));
+    locationEl.textContent = label;
+    window.currentLocation.name = label;
   } catch (err) {
     console.warn('Location name fetch failed:', err);
     locationEl.textContent = lat.toFixed(2) + ', ' + lon.toFixed(2);
+    window.currentLocation.name = lat.toFixed(2) + ', ' + lon.toFixed(2);
   }
+  window.dispatchEvent(new Event('currentLocationChanged'));
 }
 
 function setOverrideLocation(lat, lon, name) {
